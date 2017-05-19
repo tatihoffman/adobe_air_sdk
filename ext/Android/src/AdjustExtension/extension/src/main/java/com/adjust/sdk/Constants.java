@@ -12,10 +12,6 @@ package com.adjust.sdk;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author keyboardsurfer
- * @since 8.11.13
- */
 public interface Constants {
     int ONE_SECOND = 1000;
     int ONE_MINUTE = 60 * ONE_SECOND;

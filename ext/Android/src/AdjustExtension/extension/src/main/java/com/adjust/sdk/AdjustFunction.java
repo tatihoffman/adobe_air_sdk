@@ -111,6 +111,14 @@ public class AdjustFunction implements FREFunction,
             return GetAttribution(freContext, freObjects);
         }
 
+        if (functionName == AdjustContext.SetTestingMode) {
+            return SetTestingMode(freContext, freObjects);
+        }
+
+        if (functionName == AdjustContext.Teardown) {
+            return Teardown(freContext, freObjects);
+        }
+
         return null;
     }
 
@@ -253,6 +261,11 @@ public class AdjustFunction implements FREFunction,
             if (freObjects[16] != null) {
                 boolean sendInBackground = freObjects[16].getAsBool();
                 adjustConfig.setSendInBackground(sendInBackground);
+            }
+
+            if (freObjects[17] != null) {
+                String basePath = freObjects[17].getAsString();
+                adjustConfig.setBasePath(basePath);
             }
 
             Adjust.onCreate(adjustConfig);
@@ -459,6 +472,28 @@ public class AdjustFunction implements FREFunction,
                 + "adid==" + attribution.adid;
 
             return FREObject.newObject(response);
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
+    private FREObject SetTestingMode(FREContext freContext, FREObject[] freObjects) {
+        try {
+            String baseUrl = freObjects[0].getAsString();
+            AdjustFactory.setTestingMode(baseUrl);
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
+    private FREObject Teardown(FREContext freContext, FREObject[] freObjects) {
+        try {
+            Boolean deleteState = freObjects[0].getAsBool();
+            AdjustFactory.teardown(freContext.getActivity(), deleteState);
         } catch (Exception e) {
             Log.e(AdjustExtension.LogTag, e.getMessage());
         }
