@@ -19,24 +19,21 @@ android {
 }
 
 task clearJar(type: Delete) {
-    delete "build/outputs/adjust-android.jar"
+    delete "build/outputs/adjust-testing-bridge.jar"
 }
 
 task makeJar(type: Copy) {
     from('build/intermediates/bundles/default/')
     into('build/outputs/')
     include('classes.jar')
-    rename ('classes.jar', "adjust-android.jar")
+    rename ('classes.jar', "adjust-testing-bridge.jar")
 }
 
 makeJar.dependsOn(clearJar, build)
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
     compile 'com.android.support:appcompat-v7:25.0.1'
-    testCompile 'junit:junit:4.12'
     compile files('libs/FlashRuntimeExtensions.jar')
+    compile files('libs/gson-2.8.0.jar')
 }

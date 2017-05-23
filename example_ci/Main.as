@@ -1,14 +1,6 @@
 package {
     import com.adjust.sdk.Adjust;
-    import com.adjust.sdk.AdjustConfig;
-    import com.adjust.sdk.AdjustEvent;
-    import com.adjust.sdk.AdjustEventSuccess;
-    import com.adjust.sdk.AdjustEventFailure;
-    import com.adjust.sdk.AdjustSessionSuccess;
-    import com.adjust.sdk.AdjustSessionFailure;
-    import com.adjust.sdk.AdjustAttribution;
-    import com.adjust.sdk.Environment;
-    import com.adjust.sdk.LogLevel;
+    import com.adjust.sdktesting.AdjustTesting;
 
     import flash.display.SimpleButton;
     import flash.display.Sprite;

@@ -7,7 +7,7 @@ import com.adobe.fre.FREExtension;
  */
 public class AdjustExtension implements FREExtension {
     public static AdjustContext context;
-    public static String LogTag = "Adjust.air";
+    public static String LogTag = "AdjustTesting.air";
   
     @Override
     public void initialize() {}
