@@ -9,7 +9,6 @@ public class CommandListener implements ICommandRawJsonListener {
     private FREContext mContext;
 
     public CommandListener(FREContext context) {
-        Log.d(TAG, "CommandListener: hello woraaaaaaaaaaaaaaaaaaaald");
         mContext = context;
     }
 

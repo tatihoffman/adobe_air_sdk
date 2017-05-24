@@ -59,8 +59,8 @@ public class ControlChannel {
     void readControlHeaders(UtilsNetworking.HttpResponse httpResponse) {
         if (httpResponse.headerFields.containsKey(Constants.TEST_CANCELTEST_HEADER)) {
             Utils.debug("Test canceled due to %s", httpResponse.headerFields.get(Constants.TEST_CANCELTEST_HEADER).get(0));
-//            testLibrary.flushExecution();
-//            testLibrary.readHeaders(httpResponse);
+            testLibrary.flushExecution();
+            testLibrary.readHeaders(httpResponse);
         }
         if (httpResponse.headerFields.containsKey(Constants.TEST_ENDWAIT_HEADER)) {
             String waitEndReason = httpResponse.headerFields.get(Constants.TEST_ENDWAIT_HEADER).get(0);
