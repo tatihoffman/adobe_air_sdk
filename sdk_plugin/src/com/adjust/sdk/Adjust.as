@@ -74,7 +74,8 @@ package com.adjust.sdk {
                     adjustConfig.getProcessName(),
                     adjustConfig.getDelayStart(),
                     adjustConfig.getUserAgent(),
-                    adjustConfig.getSendInBackground());
+                    adjustConfig.getSendInBackground(),
+                    adjustConfig.getBasePath());
 
             // For now, call onResume after onCreate.
             getExtensionContext().call("onResume");
@@ -106,11 +107,11 @@ package com.adjust.sdk {
             return isEnabled;
         }
 
-        public static function onResume(event:Event):void {
+        public static function onResume():void {
             getExtensionContext().call("onResume");
         }
 
-        public static function onPause(event:Event):void {
+        public static function onPause():void {
             getExtensionContext().call("onPause");
         }
 
@@ -186,6 +187,10 @@ package com.adjust.sdk {
 
         public static function setTestingMode(baseUrl:String):void {
             getExtensionContext().call("setTestingMode", baseUrl);
+        }
+
+        public static function teardown(deleteState:Boolean):void {
+            getExtensionContext().call("teardown", deleteState);
         }
 
         private static function extensionResponseDelegate(statusEvent:StatusEvent):void {

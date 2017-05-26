@@ -8,6 +8,7 @@ package com.adjust.sdk {
         private var userAgent:String;
         private var environment:String;
         private var defaultTracker:String;
+        private var basePath:String;
 
         private var sendInBackground:Boolean;
         private var shouldLaunchDeeplink:Boolean;
@@ -55,6 +56,10 @@ package com.adjust.sdk {
 
         public function setProcessName(processName:String):void {
             this.processName = processName;
+        }
+
+        public function setBasePath(basePath:String):void {
+            this.basePath = basePath;
         }
 
         public function setAttributionCallbackDelegate(attributionCallback:Function):void {
@@ -120,6 +125,10 @@ package com.adjust.sdk {
 
         public function getProcessName():String {
             return this.processName;
+        }
+
+        public function getBasePath():String {
+            return this.basePath;
         }
 
         public function getAttributionCallbackDelegate():Function {
