@@ -11,11 +11,10 @@ package {
 
     public class Main extends Sprite {
         private static var IsEnabledTextField:TextField;
+        private static var commandExecutor:CommandExecutor = new CommandExecutor();
 
         public function Main() {
-            //var baseUrl:String = 'https://10.0.2.2:8443';
-            //var baseUrl:String = 'https://192.168.8.250:8443';
-            var baseUrl:String = 'http://192.168.8.250:8080';
+            var baseUrl:String = 'https://192.168.8.246:8443';
             Adjust.setTestingMode(baseUrl);
 
             AdjustTesting.initTestSession(baseUrl, testingCommandCallbackDelegate);
@@ -25,11 +24,13 @@ package {
             var data:Object = JSON.parse(json);
             var className:String = data.className;
             var functionName:String = data.functionName;
-            var params:String = data.params;
+            var params:Object = data.params;
 
-            trace('>>>>>>>>>> className: ' + className);
-            trace('>>>>>>>>>> functionName: ' + functionName);
-            trace('>>>>>>>>>> params: ' + params);
+            trace('AS3>> className: ' + className);
+            trace('AS3>> functionName: ' + functionName);
+            trace('AS3>> params: ' + params);
+
+            commandExecutor.executeCommand(functionName, params);
         }
     }
 }
