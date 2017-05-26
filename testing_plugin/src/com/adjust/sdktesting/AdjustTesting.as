@@ -25,7 +25,7 @@ package com.adjust.sdktesting {
         }
 
         private static function extensionResponseDelegate(statusEvent:StatusEvent):void {
-            if (statusEvent.code == "adjustesting_command") {
+            if (statusEvent.code == "adjusttesting_command") {
                 mTestingCommandCallbackDelegate(statusEvent.level);
             }
         }

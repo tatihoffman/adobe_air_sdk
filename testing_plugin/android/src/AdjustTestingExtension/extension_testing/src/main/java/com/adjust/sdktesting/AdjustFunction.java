@@ -37,15 +37,12 @@ public class AdjustFunction implements FREFunction {
             }
             Log.d(TAG, "initTestSession() with baseUrl[" + baseUrl + "]");
 
-            CommandListener commandListener = new CommandListener(AdjustExtension.context);
-            TestLibrary testLibrary = new TestLibrary(baseUrl, commandListener);
+            TestLibrary testLibrary = new TestLibrary(baseUrl, new CommandListener());
             testLibrary.initTestSession("adobe_air4.11.2@android4.11.4");
-            Log.d(TAG, "InitTestSession: 3");
         } catch (Exception e) {
             Log.e(AdjustExtension.LogTag, e.getMessage());
         }
 
-        Log.d(TAG, "InitTestSession: end");
         return null;
     }
 }

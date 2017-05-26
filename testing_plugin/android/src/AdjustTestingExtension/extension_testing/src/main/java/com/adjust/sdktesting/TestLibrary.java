@@ -50,13 +50,9 @@ public class TestLibrary {
     }
 
     private TestLibrary(String baseUrl) {
-        Log.d(TAG, "TestLibrary: 1");
         this.baseUrl = baseUrl;
-        Log.d(TAG, "TestLibrary: 2");
         Utils.debug("base url: %s", baseUrl);
-        Log.d(TAG, "TestLibrary: 3");
         resetTestLibrary();
-        Log.d(TAG, "TestLibrary: 4");
     }
 
     private void resetTestLibrary() {
@@ -102,13 +98,10 @@ public class TestLibrary {
     private void sendTestSessionI(String clientSdk) {
         Log.d(TAG, "sendTestSessionI: ");
         UtilsNetworking.HttpResponse httpResponse = Utils.sendPostI("/init_session", clientSdk);
-        Log.d(TAG, "sendTestSessionI: After sendPostI()");
         if (httpResponse == null) {
-            Log.d(TAG, "sendTestSessionI: returning after a empty response");
             return;
         }
 
-        Log.d(TAG, "sendTestSessionI: reading headers...");
         readHeadersI(httpResponse);
     }
 

@@ -24,7 +24,6 @@ public class Utils {
         String targetURL = TestLibrary.baseUrl + path;
 
         try {
-            Log.d(TAG, "sendPostI: starting...");
             if (clientSdk != null) {
                 UtilsNetworking.connectionOptions.clientSdk = clientSdk;
             }
