@@ -193,6 +193,22 @@ package com.adjust.sdk {
             getExtensionContext().call("teardown", deleteState);
         }
 
+        public static function setTimerInterval(timerInterval:Number) {
+            getExtensionContext().call("setTimerInterval", timerInterval);
+        }
+
+        public static function setTimerStart(timerStart:Number) {
+            getExtensionContext().call("setTimerStart", timerStart);
+        }
+
+        public static function setSessionInterval(sessionInterval:Number) {
+            getExtensionContext().call("setSessionInterval", sessionInterval);
+        }
+
+        public static function setSubsessionInterval(subsessionInterval:Number) {
+            getExtensionContext().call("setSubsessionInterval", subsessionInterval);
+        }
+
         private static function extensionResponseDelegate(statusEvent:StatusEvent):void {
             if (statusEvent.code == "adjust_attributionData") {
                 var attribution:AdjustAttribution = getAttributionFromResponse(statusEvent.level);

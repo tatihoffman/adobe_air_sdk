@@ -34,6 +34,10 @@ public class AdjustContext extends FREContext {
     public static String GetAttribution = "getAttribution";
     public static String SetTestingMode = "setTestingMode";
     public static String Teardown = "teardown";
+    public static String SetTimerInterval = "setTimerInterval";
+    public static String SetTimerStart = "setTimerStart";
+    public static String SetSessionInterval = "setSessionInterval";
+    public static String SetSubsessionInterval = "setSubsessionInterval";
 
     // iOS methods
     public static String GetIdfa = "getIdfa";
@@ -65,6 +69,10 @@ public class AdjustContext extends FREContext {
         functions.put(AdjustContext.GetAttribution, new AdjustFunction(AdjustContext.GetAttribution));
         functions.put(AdjustContext.SetTestingMode, new AdjustFunction(AdjustContext.SetTestingMode));
         functions.put(AdjustContext.Teardown, new AdjustFunction(AdjustContext.Teardown));
+        functions.put(AdjustContext.SetTimerInterval, new AdjustFunction(AdjustContext.SetTimerInterval));
+        functions.put(AdjustContext.SetTimerStart, new AdjustFunction(AdjustContext.SetTimerStart));
+        functions.put(AdjustContext.SetSessionInterval, new AdjustFunction(AdjustContext.SetSessionInterval));
+        functions.put(AdjustContext.SetSubsessionInterval, new AdjustFunction(AdjustContext.SetSubsessionInterval));
 
         return functions;
     }

@@ -501,6 +501,50 @@ public class AdjustFunction implements FREFunction,
         return null;
     }
 
+    private FREObject SetTimerStart(FREContext freContext, FREObject[] freObjects) {
+        try {
+            double timerStart = freObjects[0].getAsDouble();
+            AdjustFactory.setTimerStart((long)timerStart);
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
+    private FREObject SetTimerInterval(FREContext freContext, FREObject[] freObjects) {
+        try {
+            double timerInterval = freObjects[0].getAsDouble();
+            AdjustFactory.setTimerInterval((long)timerInterval);
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
+    private FREObject SetSessionInterval(FREContext freContext, FREObject[] freObjects) {
+        try {
+            double sessionInterval = freObjects[0].getAsDouble();
+            AdjustFactory.setSessionInterval((long)sessionInterval);
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
+    private FREObject SetSubsessionInterval(FREContext freContext, FREObject[] freObjects) {
+        try {
+            double subsessionInterval = freObjects[0].getAsDouble();
+            AdjustFactory.setSubsessionInterval((long)subsessionInterval);
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
     private FREObject GetIdfa(FREContext freContext, FREObject[] freObjects) { return null; }
 
     private FREObject AddSessionCallbackParameter(FREContext freContext, FREObject[] freObjects) {
