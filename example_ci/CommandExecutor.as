@@ -20,7 +20,6 @@ package {
         public function executeCommand(methodName:String, params:Object):void {
             switch (methodName) {
                 case "factory"                        : factory(params); break;
-                case "teardown"                       : teardown(params); break;
                 case "config"                         : config(params); break;
                 case "start"                          : start(params); break;
                 case "event"                          : eventFunc(params); break;
@@ -38,6 +37,10 @@ package {
                 case "resetSessionCallbackParameters" : resetSessionCallbackParameters(params); break;
                 case "resetSessionPartnerParameters"  : resetSessionPartnerParameters(params); break;
                 case "setPushToken"                   : setPushToken(params); break;
+                case "teardown"                       : teardown(params); break;
+                case "openDeeplink"                   : openDeeplink(params); break;
+                case "testBegin"                      : testBegin(params); break;
+                case "testEnd"                        : testEnd(params); break;
             }
         }
 
@@ -49,8 +52,8 @@ package {
         }
 
         private function factory(params:Object):void {
-            if (params['basePath']) {
-                this.basePath = params['basePath'][0];
+            if (params['basePath'] != null) {
+                this.basePath = getFirstParameterValue(params, 'basePath');
             }
         }
 
@@ -66,43 +69,43 @@ package {
             if (this.savedInstances[configName] != null) {
                 adjustConfig = AdjustConfig(this.savedInstances[configName]);
             } else {
-                var environment:String = params['environment'][0];
-                var appToken:String = params['appToken'][0];
+                var environment:String = getFirstParameterValue(params, 'environment');
+                var appToken:String = getFirstParameterValue(params, 'appToken');
 
                 adjustConfig = new AdjustConfig(appToken, environment);
                 this.savedInstances[configName] = adjustConfig;
             }
 
             if (params['logLevel'] != null) {
-                var logLevel:String = params['logLevel'][0];
+                var logLevel:String = getFirstParameterValue(params, 'logLevel');
                 adjustConfig.setLogLevel(logLevel);
             }
 
             if (params['defaultTracker']) {
-                var defaultTracker:String = params['defaultTracker'][0];
+                var defaultTracker:String = getFirstParameterValue(params, 'defaultTracker');
                 adjustConfig.setDefaultTracker(defaultTracker);
             }
 
             if (params['delayStart']) {
-                var delayStartS:String = params['delayStart'][0];
+                var delayStartS:String = getFirstParameterValue(params, 'delayStart');
                 var delayStart:Number = Number(delayStartS);
                 adjustConfig.setDelayStart(delayStart);
             }
 
             if (params['eventBufferingEnabled']) {
-                var eventBufferingEnabledS:String = params['eventBufferingEnabled'][0];
+                var eventBufferingEnabledS:String = getFirstParameterValue(params, 'eventBufferingEnabled');
                 var eventBufferingEnabled:Boolean = (eventBufferingEnabledS == 'true');
                 adjustConfig.setEventBufferingEnabled(eventBufferingEnabled);
             }
 
             if (params['sendInBackground']) {
-                var sendInBackgroundS:String = params['sendInBackground'][0];
+                var sendInBackgroundS:String = getFirstParameterValue(params, 'sendInBackground');
                 var sendInBackground:Boolean = (sendInBackgroundS == 'true');
                 adjustConfig.setSendInBackground(sendInBackground);
             }
 
             if (params['userAgent']) {
-                var userAgent:String = params['userAgent'][0];
+                var userAgent:String = getFirstParameterValue(params, 'userAgent');
                 adjustConfig.setUserAgent(userAgent);
             }
 
@@ -114,7 +117,7 @@ package {
             this.config(params);
             var configName:String = null;
             if (params['configName'] != null) {
-                configName = params['configName'][0];
+                configName = getFirstParameterValue(params, 'configName');
             } else {
                 configName = this.DefaultConfigName;
             }
@@ -130,7 +133,7 @@ package {
         private function eventFunc(params:Object):void {
             var eventName:String = null;
             if (params['eventName'] != null) {
-                eventName = params['eventName'][0];
+                eventName = getFirstParameterValue(params, 'eventName');
             } else {
                 eventName = this.DefaultEventName;
             }
@@ -139,21 +142,21 @@ package {
             if (this.savedInstances[eventName] != null) {
                 adjustEvent = AdjustEvent(this.savedInstances[eventName]);
             } else {
-                var eventToken:String = params['eventToken'][0];
+                var eventToken:String = getFirstParameterValue(params, 'eventToken');
 
                 adjustEvent = new AdjustEvent(eventToken);
                 this.savedInstances[eventName] = adjustEvent;
             }
 
             if (params['revenue'] != null) {
-                var revenueParams:Array = params['revenue'];
+                var revenueParams:Array = getValueFromKey(params, 'revenue');
                 var currency:String = revenueParams[0];
                 var revenue:Number = Number(revenueParams[1]);
                 adjustEvent.setRevenue(revenue, currency);
             }
 
             if (params['callbackParams'] != null) {
-                var callbackParams:Array = params["callbackParams"];
+                var callbackParams:Array = getValueFromKey(params, "callbackParams");
                 for (var i:Number = 0; i < callbackParams.length; i = i + 2) {
                     var key:String = callbackParams[i];
                     var value:String = callbackParams[i + 1];
@@ -162,18 +165,18 @@ package {
             }
 
             if (params['partnerParams'] != null) {
-                var partnerParams:Array = params["partnerParams"];
+                var partnerParams:Array = getValueFromKey(params, "partnerParams");
                 for (i = 0; i < partnerParams.length; i = i + 2) {
                     key= partnerParams[i];
                     value= partnerParams[i + 1];
                     adjustEvent.addPartnerParameter(key, value);
                 }
             }
-            //TODO: Add JS wrapper for order Id
-            //if (params['orderId'] != null) {
-            //var orderId:String = params['orderId'][0];
-            //adjustEvent.setOrderId(orderId);
-            //}
+
+            if (params['orderId'] != null) {
+                var orderId:String = getFirstParameterValue(params, 'orderId');
+                adjustEvent.setTransactionId(orderId);
+            }
 
             //resave the modified adjustEvent
             this.savedInstances[eventName] = adjustEvent;
@@ -185,7 +188,7 @@ package {
             this.eventFunc(params);
             var eventName:String = null;
             if (params['eventName'] != null) {
-                eventName = params['eventName'][0];
+                eventName = getFirstParameterValue(params, 'eventName');
             } else {
                 eventName = this.DefaultEventName;
             }
@@ -194,7 +197,7 @@ package {
         }
 
         private function setReferrer(params:Object):void {
-            var referrer:String = params['referrer'][0];
+            var referrer:String = getFirstParameterValue(params, 'referrer');
             Adjust.setReferrer(referrer);
         }
 
@@ -207,12 +210,12 @@ package {
         }
 
         private function setEnabled(params:Object):void {
-            var enabled:Boolean = params["enabled"][0] == 'true';
+            var enabled:Boolean = getFirstParameterValue(params, "enabled") == 'true';
             Adjust.setEnabled(enabled);
         }
 
         private function setOfflineMode(params:Object):void {
-            var enabled:Boolean = params["enabled"][0] == 'true';
+            var enabled:Boolean = getFirstParameterValue(params, "enabled") == 'true';
             Adjust.setOfflineMode(enabled);
         }
 
@@ -221,8 +224,7 @@ package {
         }
 
         private function addSessionCallbackParameter(params:Object):void {
-            for (var param:String in params) {
-                var arr:Array = params[param] as Array;
+            for (var arr:Array in params['KeyValue']) {
                 var key:String = arr[0];
                 var value:String = arr[1];
                 Adjust.addSessionCallbackParameter(key, value);
@@ -230,8 +232,7 @@ package {
         }
 
         private function addSessionPartnerParameter(params:Object):void {
-            for (var param:String in params) {
-                var arr:Array = params[param] as Array;
+            for (var arr:Array in params['KeyValue']) {
                 var key:String = arr[0];
                 var value:String = arr[1];
                 Adjust.addSessionPartnerParameter(key, value);
@@ -239,12 +240,12 @@ package {
         }
 
         private function removeSessionCallbackParameter(params:Object):void {
-            var key:String = params['key'][0];
+            var key:String = getFirstParameterValue(params, 'key');
             Adjust.removeSessionCallbackParameter(key);
         }
 
         private function removeSessionPartnerParameter(params:Object):void {
-            var key:String = params['key'][0];
+            var key:String = getFirstParameterValue(params, 'key');
             Adjust.removeSessionPartnerParameter(key);
         }
 
@@ -257,8 +258,27 @@ package {
         }
 
         private function setPushToken(params:Object):void {
-            var token:String = params['pushToken'][0];
+            var token:String = getFirstParameterValue(params, 'pushToken');
             Adjust.setDeviceToken(token);
+        }
+
+        private function getValueFromKey(params:Object, key:String):Array {
+            if (params[key] != null) {
+                return params[key];
+            }
+
+            return null;
+        }
+
+        private function getFirstParameterValue(params:Object, key:String):String {
+            if (params[key] != null) {
+                var param:Array = params[key];
+                if(param.length >= 1) {
+                    return param[0];
+                }
+            }
+
+            return null;
         }
     }
 }
