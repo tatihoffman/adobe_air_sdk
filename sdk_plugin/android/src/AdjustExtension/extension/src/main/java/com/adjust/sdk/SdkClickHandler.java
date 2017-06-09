@@ -55,7 +55,6 @@ public class SdkClickHandler implements ISdkClickHandler {
         this.packageQueue = new ArrayList<ActivityPackage>();
         this.activityHandlerWeakRef = new WeakReference<IActivityHandler>(activityHandler);
         this.basePath = activityHandler.getBasePath();
-        this.activityHandlerWeakRef = new WeakReference<IActivityHandler>(activityHandler);
     }
 
     @Override

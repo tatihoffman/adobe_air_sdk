@@ -123,6 +123,7 @@ public class AdjustFunction implements FREFunction,
     }
 
     private FREObject OnCreate(FREContext freContext, FREObject[] freObjects) {
+        Log.d("AdjustFunction", ">>>>>>>>>>> OnCreate 1");
         try {
             String appToken = null;
             String environment = null;
@@ -268,6 +269,7 @@ public class AdjustFunction implements FREFunction,
                 adjustConfig.setBasePath(basePath);
             }
 
+            Log.d("AdjustFunction", ">>>>>>>>>>> OnCreate 2");
             Adjust.onCreate(adjustConfig);
         } catch (Exception e) {
             Log.e(AdjustExtension.LogTag, e.getMessage());

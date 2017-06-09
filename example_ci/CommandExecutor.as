@@ -114,6 +114,7 @@ package {
         }
 
         private function start(params:Object):void {
+            trace("[*] start >>>>>>>");
             this.config(params);
             var configName:String = null;
             if (params['configName'] != null) {
@@ -122,12 +123,16 @@ package {
                 configName = this.DefaultConfigName;
             }
 
+            trace("[*] start 1 >>>>>>>");
             var adjustConfig:AdjustConfig = AdjustConfig(this.savedInstances[configName]);
 
             adjustConfig.setBasePath(this.basePath);
+            trace("[*] start 2 >>>>>>>");
             //resave the modified adjustConfig
             this.savedInstances[configName] = adjustConfig;
+            trace("[*] start 3 >>>>>>>");
             Adjust.start(adjustConfig);
+            trace("[*] start <<<<<<<");
         }
 
         private function eventFunc(params:Object):void {
@@ -185,6 +190,7 @@ package {
         }
 
         private function trackEvent(params:Object):void {
+            trace("[*] trackEvent >>>>>>>");
             this.eventFunc(params);
             var eventName:String = null;
             if (params['eventName'] != null) {
@@ -194,6 +200,7 @@ package {
             }
             var adjustEvent:AdjustEvent = AdjustEvent(this.savedInstances[eventName]);
             Adjust.trackEvent(adjustEvent);
+            trace("[*] trackEvent <<<<<<<");
         }
 
         private function setReferrer(params:Object):void {
@@ -260,6 +267,33 @@ package {
         private function setPushToken(params:Object):void {
             var token:String = getFirstParameterValue(params, 'pushToken');
             Adjust.setDeviceToken(token);
+        }
+
+        private function openDeeplink(params:Object):void {
+            trace("[*] openDeeplink");
+            var deeplink:String = getFirstParameterValue(params, "deeplink");
+            Adjust.appWillOpenUrl(deeplink);
+        }
+
+        private function testBegin(params:Object):void {
+            trace("[*] testBegin >>>>>");
+            if (params['basePath'] != null) {
+                this.basePath = getFirstParameterValue(params, "basePath");
+            }
+
+            Adjust.teardown(true);
+            Adjust.setTimerInterval(-1);
+            Adjust.setTimerStart(-1);
+            Adjust.setSessionInterval(-1);
+            Adjust.setSubsessionInterval(-1);
+            this.savedInstances = new Object();
+            trace("[*] testBegin <<<<<<<");
+        }
+
+        private function testEnd(params:Object):void {
+            trace("[*] testEnd >>>>>>>");
+            Adjust.teardown(true);
+            trace("[*] testEnd <<<<<<<");
         }
 
         private function getValueFromKey(params:Object, key:String):Array {
