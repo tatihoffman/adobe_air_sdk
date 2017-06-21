@@ -1,18 +1,31 @@
 package com.adjust.sdktesting;
 
 import android.os.SystemClock;
-import android.util.Log;
 
 import com.google.gson.Gson;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import static com.adjust.sdktesting.Constants.BASE_PATH_HEADER;
+import static com.adjust.sdktesting.Constants.TEST_LIBRARY_CLASSNAME;
+import static com.adjust.sdktesting.Constants.TEST_SCRIPT_HEADER;
+import static com.adjust.sdktesting.Constants.TEST_SESSION_END_HEADER;
+import static com.adjust.sdktesting.Constants.WAIT_FOR_CONTROL;
+import static com.adjust.sdktesting.Constants.WAIT_FOR_SLEEP;
+import static com.adjust.sdktesting.Utils.debug;
+import static com.adjust.sdktesting.UtilsNetworking.sendPostI;
 
 
 /**
@@ -20,24 +33,25 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class TestLibrary {
-    private static final String TAG = "TestLibrary";
     static String baseUrl;
-    ScheduledThreadPoolExecutor executor;
+    ExecutorService executor;
     ICommandListener commandListener;
     ICommandJsonListener commandJsonListener;
     ICommandRawJsonListener commandRawJsonListener;
     ControlChannel controlChannel;
     String currentTest;
-    Future<?> lastFuture;
     String currentBasePath;
     Gson gson = new Gson();
     BlockingQueue<String> waitControlQueue;
+    Map<String, String> infoToServer;
+
+    String testNames = null;
+    boolean exitAfterEnd = true;
 
     public TestLibrary(String baseUrl, ICommandRawJsonListener commandRawJsonListener) {
         this(baseUrl);
         this.commandRawJsonListener = commandRawJsonListener;
     }
-
 
     public TestLibrary(String baseUrl, ICommandJsonListener commandJsonListener) {
         this(baseUrl);
@@ -51,32 +65,93 @@ public class TestLibrary {
 
     private TestLibrary(String baseUrl) {
         this.baseUrl = baseUrl;
-        Utils.debug("base url: %s", baseUrl);
-        resetTestLibrary();
+        debug("base url: %s", baseUrl);
     }
 
-    private void resetTestLibrary() {
-        Log.d(TAG, "resetTestLibrary: ");
-        executor = new ScheduledThreadPoolExecutor(1);
-        Log.d(TAG, "resetTestLibrary: 2");
-        waitControlQueue = new SynchronousQueue<>();
-        Log.d(TAG, "resetTestLibrary: 3");
-        lastFuture = null;
+    // resets test library to initial state
+    void resetTestLibrary() {
+        teardown(true);
+
+        executor = Executors.newCachedThreadPool();
+        waitControlQueue = new LinkedBlockingQueue<String>();
+    }
+
+    // clears test library
+    private void teardown(boolean shutdownNow) {
+        if (executor != null) {
+            if (shutdownNow) {
+                debug("test library executor shutdownNow");
+                executor.shutdownNow();
+            } else {
+                debug("test library executor shutdown");
+                executor.shutdown();
+            }
+        }
+        executor = null;
+
+        clearTest();
+    }
+
+    // clear for each test
+    private void clearTest() {
+        if (waitControlQueue != null) {
+            waitControlQueue.clear();
+        }
+        waitControlQueue = null;
+        if (controlChannel != null) {
+            controlChannel.teardown();
+        }
+        controlChannel = null;
+        infoToServer = null;
+    }
+
+    // reset for each test
+    private void resetTest() {
+        clearTest();
+
+        waitControlQueue = new LinkedBlockingQueue<String>();
+        controlChannel = new ControlChannel(this);
+    }
+
+    public void setTests(String testNames) {
+        this.testNames = testNames;
+    }
+
+    public void doNotExitAfterEnd() {
+        this.exitAfterEnd = false;
     }
 
     public void initTestSession(final String clientSdk) {
-        Log.d(TAG, "initTestSession: ");
-        lastFuture = executor.submit(new Runnable() {
+        resetTestLibrary();
+
+        executor.submit(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "run: ");
                 sendTestSessionI(clientSdk);
             }
         });
     }
 
-    public void readHeaders(final UtilsNetworking.HttpResponse httpResponse) {
-        lastFuture = executor.submit(new Runnable() {
+    public void addInfoToSend(String key, String value) {
+        if (infoToServer == null) {
+            infoToServer = new HashMap<String, String>();
+        }
+
+        infoToServer.put(key, value);
+    }
+
+    public void sendInfoToServer() {
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                sendInfoToServerI();
+            }
+        });
+    }
+
+
+    void readHeaders(final UtilsNetworking.HttpResponse httpResponse) {
+        executor.submit(new Runnable() {
             @Override
             public void run() {
                 readHeadersI(httpResponse);
@@ -84,20 +159,19 @@ public class TestLibrary {
         });
     }
 
-    public void flushExecution() {
-        Utils.debug("flushExecution");
-        if (lastFuture != null && !lastFuture.isDone()) {
-            Utils.debug("lastFuture.cancel");
-            lastFuture.cancel(true);
+    private void sendTestSessionI(String clientSdk) {
+        UtilsNetworking.HttpResponse httpResponse = sendPostI("/init_session", clientSdk, testNames);
+        if (httpResponse == null) {
+            return;
         }
-        executor.shutdownNow();
 
-        resetTestLibrary();
+        readHeadersI(httpResponse);
     }
 
-    private void sendTestSessionI(String clientSdk) {
-        Log.d(TAG, "sendTestSessionI: ");
-        UtilsNetworking.HttpResponse httpResponse = Utils.sendPostI("/init_session", clientSdk);
+    private void sendInfoToServerI() {
+        debug("sendInfoToServerI called");
+        UtilsNetworking.HttpResponse httpResponse = sendPostI(Utils.appendBasePath(currentBasePath, "/test_info"), null, infoToServer);
+        infoToServer = null;
         if (httpResponse == null) {
             return;
         }
@@ -106,60 +180,57 @@ public class TestLibrary {
     }
 
     public void readHeadersI(UtilsNetworking.HttpResponse httpResponse) {
-        if (httpResponse.headerFields.containsKey(Constants.TEST_SESSION_END_HEADER)) {
-            if (controlChannel != null) {
-                controlChannel.teardown();
+        if (httpResponse.headerFields.containsKey(TEST_SESSION_END_HEADER)) {
+            teardown(false);
+            debug("TestSessionEnd received");
+            if (exitAfterEnd) {
+                exit();
             }
-            controlChannel = null;
-            Utils.debug("TestSessionEnd received");
             return;
         }
 
-        if (httpResponse.headerFields.containsKey(Constants.BASE_PATH_HEADER)) {
-            currentBasePath = httpResponse.headerFields.get(Constants.BASE_PATH_HEADER).get(0);
+        if (httpResponse.headerFields.containsKey(BASE_PATH_HEADER)) {
+            currentBasePath = httpResponse.headerFields.get(BASE_PATH_HEADER).get(0);
         }
 
-        if (httpResponse.headerFields.containsKey(Constants.TEST_SCRIPT_HEADER)) {
-            currentTest = httpResponse.headerFields.get(Constants.TEST_SCRIPT_HEADER).get(0);
-            if (controlChannel != null) {
-                controlChannel.teardown();
-            }
-            controlChannel = new ControlChannel(this);
+        if (httpResponse.headerFields.containsKey(TEST_SCRIPT_HEADER)) {
+            currentTest = httpResponse.headerFields.get(TEST_SCRIPT_HEADER).get(0);
+            resetTest();
 
             List<TestCommand> testCommands = Arrays.asList(gson.fromJson(httpResponse.response, TestCommand[].class));
             try {
                 execTestCommandsI(testCommands);
             } catch (InterruptedException e) {
-                Utils.debug("InterruptedException thrown %s", e.getMessage());
+                debug("InterruptedException thrown %s", e.getMessage());
             }
         }
     }
 
     private void execTestCommandsI(List<TestCommand> testCommands) throws InterruptedException {
-        Utils.debug("testCommands: %s", testCommands);
+        debug("testCommands: %s", testCommands);
 
         for (TestCommand testCommand : testCommands) {
             if (Thread.interrupted()) {
-                Utils.debug("Thread interrupted");
+                debug("Thread interrupted");
                 return;
             }
-            Utils.debug("ClassName: %s", testCommand.className);
-            Utils.debug("FunctionName: %s", testCommand.functionName);
-            Utils.debug("Params:");
+            debug("ClassName: %s", testCommand.className);
+            debug("FunctionName: %s", testCommand.functionName);
+            debug("Params:");
             if (testCommand.params != null && testCommand.params.size() > 0) {
                 for (Map.Entry<String, List<String>> entry : testCommand.params.entrySet()) {
-                    Utils.debug("\t%s: %s", entry.getKey(), entry.getValue());
+                    debug("\t%s: %s", entry.getKey(), entry.getValue());
                 }
             }
             long timeBefore = System.nanoTime();
-            Utils.debug("time before %s %s: %d", testCommand.className, testCommand.functionName, timeBefore);
+            debug("time before %s %s: %d", testCommand.className, testCommand.functionName, timeBefore);
 
-            if (Constants.TEST_LIBRARY_CLASSNAME.equals(testCommand.className)) {
+            if (TEST_LIBRARY_CLASSNAME.equals(testCommand.className)) {
                 executeTestLibraryCommandI(testCommand);
                 long timeAfter = System.nanoTime();
                 long timeElapsedMillis = TimeUnit.NANOSECONDS.toMillis(timeAfter - timeBefore);
-                Utils.debug("time after %s %s: %d", testCommand.className, testCommand.functionName, timeAfter);
-                Utils.debug("time elapsed %s %s in milli seconds: %d", testCommand.className, testCommand.functionName, timeElapsedMillis);
+                debug("time after %s %s: %d", testCommand.className, testCommand.functionName, timeAfter);
+                debug("time elapsed %s %s in milli seconds: %d", testCommand.className, testCommand.functionName, timeElapsedMillis);
 
                 continue;
             }
@@ -172,8 +243,8 @@ public class TestLibrary {
             }
             long timeAfter = System.nanoTime();
             long timeElapsedMillis = TimeUnit.NANOSECONDS.toMillis(timeAfter - timeBefore);
-            Utils.debug("time after %s.%s: %d", testCommand.className, testCommand.functionName, timeAfter);
-            Utils.debug("time elapsed %s.%s in milli seconds: %d", testCommand.className, testCommand.functionName, timeElapsedMillis);
+            debug("time after %s.%s: %d", testCommand.className, testCommand.functionName, timeAfter);
+            debug("time elapsed %s.%s in milli seconds: %d", testCommand.className, testCommand.functionName, timeElapsedMillis);
         }
     }
 
@@ -186,29 +257,30 @@ public class TestLibrary {
     }
 
     private void endTestI() {
-        UtilsNetworking.HttpResponse httpResponse = Utils.sendPostI(Utils.appendBasePath(currentBasePath, "/end_test"));
-        this.currentTest = null;
+        UtilsNetworking.HttpResponse httpResponse = sendPostI(Utils.appendBasePath(currentBasePath, "/end_test"));
         if (httpResponse == null) {
+            if (exitAfterEnd) {
+                exit();
+            }
             return;
         }
 
         readHeadersI(httpResponse);
-        exit();
     }
 
     private void waitI(Map<String, List<String>> params) throws InterruptedException {
-        if (params.containsKey(Constants.WAIT_FOR_CONTROL)) {
-            String waitExpectedReason = params.get(Constants.WAIT_FOR_CONTROL).get(0);
-            Utils.debug("wait for %s", waitExpectedReason);
+        if (params.containsKey(WAIT_FOR_CONTROL)) {
+            String waitExpectedReason = params.get(WAIT_FOR_CONTROL).get(0);
+            debug("wait for %s", waitExpectedReason);
             String endReason = waitControlQueue.take();
-            Utils.debug("wait ended due to %s", endReason);
+            debug("wait ended due to %s", endReason);
         }
-        if (params.containsKey(Constants.WAIT_FOR_SLEEP)) {
-            long millisToSleep = Long.parseLong(params.get(Constants.WAIT_FOR_SLEEP).get(0));
-            Utils.debug("sleep for %s", millisToSleep);
+        if (params.containsKey(WAIT_FOR_SLEEP)) {
+            long millisToSleep = Long.parseLong(params.get(WAIT_FOR_SLEEP).get(0));
+            debug("sleep for %s", millisToSleep);
 
             SystemClock.sleep(millisToSleep);
-            Utils.debug("sleep ended");
+            debug("sleep ended");
         }
     }
 

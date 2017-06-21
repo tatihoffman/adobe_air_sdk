@@ -16,12 +16,18 @@ package com.adjust.sdktesting {
         }
 
         public static function initTestSession(baseUrl:String, testingCommandCallbackDelegate:Function):void {
-            var app:NativeApplication = NativeApplication.nativeApplication;
-
             mTestingCommandCallbackDelegate = testingCommandCallbackDelegate;
             getExtensionContext().addEventListener(StatusEvent.STATUS, extensionResponseDelegate);
 
             getExtensionContext().call("initTestSession", baseUrl);
+        }
+
+        public static function addInfoToSend(key:String, value:String):void {
+            getExtensionContext().call("addInfoToSend", key, value);
+        }
+
+        public static function sendInfoToServer():void {
+            getExtensionContext().call("sendInfoToServer");
         }
 
         private static function extensionResponseDelegate(statusEvent:StatusEvent):void {

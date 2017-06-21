@@ -13,9 +13,6 @@ package {
 
     public class CommandExecutor {
         private var basePath:String;
-        private var DefaultConfigName:String = "defaultConfig";
-        private var DefaultEventName:String = "defaultEvent";
-        private var savedInstances:Object = new Object();
 
         public function executeCommand(methodName:String, params:Object):void {
             switch (methodName) {
@@ -39,15 +36,9 @@ package {
                 case "setPushToken"                   : setPushToken(params); break;
                 case "teardown"                       : teardown(params); break;
                 case "openDeeplink"                   : openDeeplink(params); break;
+                case "sendReferrer"                   : sendReferrer(params); break;
                 case "testBegin"                      : testBegin(params); break;
                 case "testEnd"                        : testEnd(params); break;
-            }
-        }
-
-        private function teardown(params:Object):void {
-            if(params.deleteState != null) {
-                var deleteState:Boolean = params.deleteState[0];
-                Adjust.teardown(deleteState);
             }
         }
 
@@ -55,108 +46,110 @@ package {
             if (params['basePath'] != null) {
                 this.basePath = getFirstParameterValue(params, 'basePath');
             }
+
+            if (params['timerInterval'] != null) {
+                Adjust.setTimerInterval(parseFloat(getFirstParameterValue(params, 'timerInterval')));
+            }
+
+            if (params['timerStart'] != null) {
+                Adjust.setTimerStart(parseFloat(getFirstParameterValue(params, 'timerStart')));
+            }
+
+            if (params['sessionInterval'] != null) {
+                Adjust.setSessionInterval(parseFloat(getFirstParameterValue(params, 'sessionInterval')));
+            }
+
+            if (params['subsessionInterval'] != null) {
+                Adjust.setSubsessionInterval(parseFloat(getFirstParameterValue(params, 'subsessionInterval')));
+            }
         }
 
-        private function config(params:Object):void {
-            var configName:String = "";
-            if (params.configName != null) {
-                configName = params.configName[0];
-            } else {
-                configName = this.DefaultConfigName;
+        private function teardown(params:Object):void {
+            if(params['deleteState'] != null) {
+                var deleteState:Boolean = params.deleteState[0];
+                Adjust.teardown(deleteState);
             }
+        }
 
-            var adjustConfig:AdjustConfig;
-            if (this.savedInstances[configName] != null) {
-                adjustConfig = AdjustConfig(this.savedInstances[configName]);
-            } else {
-                var environment:String = getFirstParameterValue(params, 'environment');
-                var appToken:String = getFirstParameterValue(params, 'appToken');
+        private function config(params:Object):AdjustConfig {
+            var environment:String = getFirstParameterValue(params, 'environment');
+            var appToken:String = getFirstParameterValue(params, 'appToken');
 
-                adjustConfig = new AdjustConfig(appToken, environment);
-                this.savedInstances[configName] = adjustConfig;
-            }
+            var adjustConfig:AdjustConfig = new AdjustConfig(appToken, environment);
 
             if (params['logLevel'] != null) {
                 var logLevel:String = getFirstParameterValue(params, 'logLevel');
                 adjustConfig.setLogLevel(logLevel);
             }
 
-            if (params['defaultTracker']) {
+            if (params['defaultTracker'] != null) {
                 var defaultTracker:String = getFirstParameterValue(params, 'defaultTracker');
                 adjustConfig.setDefaultTracker(defaultTracker);
             }
 
-            if (params['delayStart']) {
+            if (params['delayStart'] != null) {
                 var delayStartS:String = getFirstParameterValue(params, 'delayStart');
                 var delayStart:Number = Number(delayStartS);
                 adjustConfig.setDelayStart(delayStart);
             }
 
-            if (params['eventBufferingEnabled']) {
+            if (params['eventBufferingEnabled'] != null) {
                 var eventBufferingEnabledS:String = getFirstParameterValue(params, 'eventBufferingEnabled');
                 var eventBufferingEnabled:Boolean = (eventBufferingEnabledS == 'true');
                 adjustConfig.setEventBufferingEnabled(eventBufferingEnabled);
             }
 
-            if (params['sendInBackground']) {
+            if (params['sendInBackground'] != null) {
                 var sendInBackgroundS:String = getFirstParameterValue(params, 'sendInBackground');
                 var sendInBackground:Boolean = (sendInBackgroundS == 'true');
                 adjustConfig.setSendInBackground(sendInBackground);
             }
 
-            if (params['userAgent']) {
+            if (params['userAgent'] != null) {
                 var userAgent:String = getFirstParameterValue(params, 'userAgent');
                 adjustConfig.setUserAgent(userAgent);
             }
 
-            //resave the modified adjustConfig
-            this.savedInstances[configName] = adjustConfig;
+            if (params['attributionCallbackSendAll'] != null) {
+                adjustConfig.setAttributionCallbackDelegate(attributionCallbackDelegate);
+            }
+
+            if (params['sessionCallbackSendSuccess'] != null) {
+                adjustConfig.setSessionTrackingSucceededDelegate(sessionTrackingSucceededDelegate);
+            }
+
+            if (params['sessionCallbackSendFailure'] != null) {
+                adjustConfig.setSessionTrackingFailedDelegate(sessionTrackingFailedDelegate);
+            }
+
+            if (params['eventCallbackSendSuccess'] != null) {
+                adjustConfig.setEventTrackingSucceededDelegate(eventTrackingSucceededDelegate);
+            }
+
+            if (params['eventCallbackSendFailure'] != null) {
+                adjustConfig.setEventTrackingFailedDelegate(eventTrackingFailedDelegate);
+            }
+
+            return adjustConfig;
         }
 
         private function start(params:Object):void {
-            trace("[*] start >>>>>>>");
-            this.config(params);
-            var configName:String = null;
-            if (params['configName'] != null) {
-                configName = getFirstParameterValue(params, 'configName');
-            } else {
-                configName = this.DefaultConfigName;
-            }
-
-            trace("[*] start 1 >>>>>>>");
-            var adjustConfig:AdjustConfig = AdjustConfig(this.savedInstances[configName]);
+            var adjustConfig:AdjustConfig = this.config(params);
 
             adjustConfig.setBasePath(this.basePath);
-            trace("[*] start 2 >>>>>>>");
-            //resave the modified adjustConfig
-            this.savedInstances[configName] = adjustConfig;
-            trace("[*] start 3 >>>>>>>");
+
             Adjust.start(adjustConfig);
-            trace("[*] start <<<<<<<");
         }
 
-        private function eventFunc(params:Object):void {
-            var eventName:String = null;
-            if (params['eventName'] != null) {
-                eventName = getFirstParameterValue(params, 'eventName');
-            } else {
-                eventName = this.DefaultEventName;
-            }
-
-            var adjustEvent:AdjustEvent;
-            if (this.savedInstances[eventName] != null) {
-                adjustEvent = AdjustEvent(this.savedInstances[eventName]);
-            } else {
-                var eventToken:String = getFirstParameterValue(params, 'eventToken');
-
-                adjustEvent = new AdjustEvent(eventToken);
-                this.savedInstances[eventName] = adjustEvent;
-            }
+        private function eventFunc(params:Object):AdjustEvent {
+            var eventToken:String = getFirstParameterValue(params, 'eventToken');
+            var adjustEvent:AdjustEvent = new AdjustEvent(eventToken);
 
             if (params['revenue'] != null) {
                 var revenueParams:Array = getValueFromKey(params, 'revenue');
                 var currency:String = revenueParams[0];
                 var revenue:Number = Number(revenueParams[1]);
+
                 adjustEvent.setRevenue(revenue, currency);
             }
 
@@ -165,6 +158,7 @@ package {
                 for (var i:Number = 0; i < callbackParams.length; i = i + 2) {
                     var key:String = callbackParams[i];
                     var value:String = callbackParams[i + 1];
+
                     adjustEvent.addCallbackParameter(key, value);
                 }
             }
@@ -172,8 +166,9 @@ package {
             if (params['partnerParams'] != null) {
                 var partnerParams:Array = getValueFromKey(params, "partnerParams");
                 for (i = 0; i < partnerParams.length; i = i + 2) {
-                    key= partnerParams[i];
-                    value= partnerParams[i + 1];
+                    key = partnerParams[i];
+                    value = partnerParams[i + 1];
+
                     adjustEvent.addPartnerParameter(key, value);
                 }
             }
@@ -183,24 +178,12 @@ package {
                 adjustEvent.setTransactionId(orderId);
             }
 
-            //resave the modified adjustEvent
-            this.savedInstances[eventName] = adjustEvent;
-
-            Adjust.trackEvent(adjustEvent);
+            return adjustEvent;
         }
 
         private function trackEvent(params:Object):void {
-            trace("[*] trackEvent >>>>>>>");
-            this.eventFunc(params);
-            var eventName:String = null;
-            if (params['eventName'] != null) {
-                eventName = getFirstParameterValue(params, 'eventName');
-            } else {
-                eventName = this.DefaultEventName;
-            }
-            var adjustEvent:AdjustEvent = AdjustEvent(this.savedInstances[eventName]);
+            var adjustEvent:AdjustEvent = this.eventFunc(params);
             Adjust.trackEvent(adjustEvent);
-            trace("[*] trackEvent <<<<<<<");
         }
 
         private function setReferrer(params:Object):void {
@@ -234,6 +217,7 @@ package {
             for (var arr:Array in params['KeyValue']) {
                 var key:String = arr[0];
                 var value:String = arr[1];
+
                 Adjust.addSessionCallbackParameter(key, value);
             }
         }
@@ -242,6 +226,7 @@ package {
             for (var arr:Array in params['KeyValue']) {
                 var key:String = arr[0];
                 var value:String = arr[1];
+
                 Adjust.addSessionPartnerParameter(key, value);
             }
         }
@@ -270,13 +255,16 @@ package {
         }
 
         private function openDeeplink(params:Object):void {
-            trace("[*] openDeeplink");
             var deeplink:String = getFirstParameterValue(params, "deeplink");
             Adjust.appWillOpenUrl(deeplink);
         }
 
+        private function sendReferrer(params:Object):void {
+            var referrer:String = getFirstParameterValue(params, 'referrer');
+            Adjust.setReferrer(referrer);
+        }
+
         private function testBegin(params:Object):void {
-            trace("[*] testBegin >>>>>");
             if (params['basePath'] != null) {
                 this.basePath = getFirstParameterValue(params, "basePath");
             }
@@ -286,14 +274,63 @@ package {
             Adjust.setTimerStart(-1);
             Adjust.setSessionInterval(-1);
             Adjust.setSubsessionInterval(-1);
-            this.savedInstances = new Object();
-            trace("[*] testBegin <<<<<<<");
         }
 
         private function testEnd(params:Object):void {
-            trace("[*] testEnd >>>>>>>");
             Adjust.teardown(true);
-            trace("[*] testEnd <<<<<<<");
+        }
+
+        private static function attributionCallbackDelegate(attribution:AdjustAttribution):void {
+            AdjustTesting.addInfoToSend("trackerToken", attribution.getTrackerToken());
+            AdjustTesting.addInfoToSend("trackerName", attribution.getTrackerName());
+            AdjustTesting.addInfoToSend("network", attribution.getNetwork());
+            AdjustTesting.addInfoToSend("campaign", attribution.getCampaign());
+            AdjustTesting.addInfoToSend("adgroup", attribution.getAdGroup());
+            AdjustTesting.addInfoToSend("creative", attribution.getCreative());
+            AdjustTesting.addInfoToSend("clickLabel", attribution.getClickLabel());
+            AdjustTesting.addInfoToSend("adid", attribution.getAdid());
+
+            AdjustTesting.sendInfoToServer();
+        }
+
+        private static function eventTrackingSucceededDelegate(eventSuccess:AdjustEventSuccess):void {
+            AdjustTesting.addInfoToSend("message", eventSuccess.getMessage());
+            AdjustTesting.addInfoToSend("timestamp", eventSuccess.getTimeStamp());
+            AdjustTesting.addInfoToSend("adid", eventSuccess.getAdid());
+            AdjustTesting.addInfoToSend("eventToken", eventSuccess.getEventToken());
+            AdjustTesting.addInfoToSend("jsonResponse", eventSuccess.getJsonResponse());
+
+            AdjustTesting.sendInfoToServer();
+        }
+
+        private static function eventTrackingFailedDelegate(eventFail:AdjustEventFailure):void {
+            AdjustTesting.addInfoToSend("message", eventFail.getMessage());
+            AdjustTesting.addInfoToSend("timestamp", eventFail.getTimeStamp());
+            AdjustTesting.addInfoToSend("adid", eventFail.getAdid());
+            AdjustTesting.addInfoToSend("eventToken", eventFail.getEventToken());
+            AdjustTesting.addInfoToSend("willRetry", eventFail.getWillRetry().toString());
+            AdjustTesting.addInfoToSend("jsonResponse", eventFail.getJsonResponse());
+
+            AdjustTesting.sendInfoToServer();
+        }
+
+        private static function sessionTrackingSucceededDelegate(sessionSuccess:AdjustSessionSuccess):void {
+            AdjustTesting.addInfoToSend("message", sessionSuccess.getMessage());
+            AdjustTesting.addInfoToSend("timestamp", sessionSuccess.getTimeStamp());
+            AdjustTesting.addInfoToSend("adid", sessionSuccess.getAdid());
+            AdjustTesting.addInfoToSend("jsonResponse", sessionSuccess.getJsonResponse());
+
+            AdjustTesting.sendInfoToServer();
+        }
+
+        private static function sessionTrackingFailedDelegate(sessionFail:AdjustSessionFailure):void {
+            AdjustTesting.addInfoToSend("message", sessionFail.getMessage());
+            AdjustTesting.addInfoToSend("timestamp", sessionFail.getTimeStamp());
+            AdjustTesting.addInfoToSend("adid", sessionFail.getAdid());
+            AdjustTesting.addInfoToSend("willRetry", sessionFail.getWillRetry().toString());
+            AdjustTesting.addInfoToSend("jsonResponse", sessionFail.getJsonResponse());
+
+            AdjustTesting.sendInfoToServer();
         }
 
         private function getValueFromKey(params:Object, key:String):Array {

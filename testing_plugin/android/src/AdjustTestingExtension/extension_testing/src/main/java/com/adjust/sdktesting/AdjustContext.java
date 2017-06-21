@@ -10,13 +10,17 @@ import java.util.Map;
  * Created by pfms on 31/07/14.
  */
 public class AdjustContext extends FREContext {
-    public static String InitTestSession = "initTestSession";
+    public static String InitTestSession  = "initTestSession";
+    public static String AddInfoToSend    = "addInfoToSend";
+    public static String SendInfoToServer = "sendInfoToServer";
 
     @Override
     public Map<String, FREFunction> getFunctions() {
         Map<String, FREFunction> functions = new HashMap<String, FREFunction>();
 
         functions.put(AdjustContext.InitTestSession, new AdjustFunction(AdjustContext.InitTestSession));
+        functions.put(AdjustContext.AddInfoToSend, new AdjustFunction(AdjustContext.AddInfoToSend));
+        functions.put(AdjustContext.SendInfoToServer, new AdjustFunction(AdjustContext.SendInfoToServer));
 
         return functions;
     }
