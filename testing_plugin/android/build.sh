@@ -1,42 +1,37 @@
 #!/usr/bin/env bash
 
-# Get the current directory (testing_plugin/android)
-TESTING_PLUGIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Get the root directory
+ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT_DIR="$(dirname "$ROOT_DIR")"
+ROOT_DIR="$(dirname "$ROOT_DIR")"
+TESTING_PLUGIN_DIR=testing_plugin/android
 BUILD_DIR=src/AdjustTestingExtension
 JAR_IN_DIR=src/AdjustTestingExtension/extension_testing/build/outputs
-#ORIGINAL_SDK_DIR=sdk/Adjust/adjust/src/main/java/com/adjust/sdk
-EXTENSION_DIR=src/AdjustTestingExtension/extension/src/main/java/com/adjust/sdktesting
+TEST_LIBRARY_DIR=ext/android/sdk/Adjust/testlibrary/src/main/java/com/adjust/testlibrary
+EXTENSION_DIR=src/AdjustTestingExtension/extension_testing/src/main/java/com/adjust/sdktesting
 
 RED='\033[0;31m' # Red color
 GREEN='\033[0;32m' # Green color
 NC='\033[0m' # No Color
 
-# cd to the called directory to be able to run the script from anywhere
-cd $(dirname $0) 
-cd ${TESTING_PLUGIN_DIR}
+cd ${ROOT_DIR}/${TESTING_PLUGIN_DIR}/${EXTENSION_DIR}
+mv -v AdjustExtension.java AdjustFunction.java AdjustContext.java CommandListener.java ..
+rm -rv *
+mv -v ../Adjust*.java .
+mv -v ../CommandListener.java .
 
-# TODO: Make it so that it copies from test_ci Android SDK branch
-#cd ${EXTENSION_DIR}
-#mv AdjustActivity.java AdjustExtension.java AdjustFunction.java AdjustContext.java ..
-#rm -r *
-#mv ../Adjust*.java .
+# Copy all files from original test library location
+cd ${ROOT_DIR}/${TEST_LIBRARY_DIR}
+cp -rv * ${ROOT_DIR}/${TESTING_PLUGIN_DIR}/${EXTENSION_DIR}
+cd ${ROOT_DIR}/${TESTING_PLUGIN_DIR}/${EXTENSION_DIR}
+sed -i '' -e s/'com.adjust.testlibrary'/'com.adjust.sdktesting'/g *.java
 
-# Copy all files from ext/android/sdk towards ext/android/src/AdjustExtension/extension/src/main/java/com/adjust/sdk/
-#cd ${TESTING_PLUGIN_DIR}/${ORIGINAL_SDK_DIR}
-#cp -rv * ${TESTING_PLUGIN_DIR}/${EXTENSION_DIR}
-
-echo -e "${GREEN}>>> Android build script: Running Gradle tasks: clean clearJar makeJar ${NC}"
-cd ${TESTING_PLUGIN_DIR}/${BUILD_DIR}; ./gradlew clean makeJar
+echo -e "${GREEN}>>> Android build script: Running Gradle tasks: clean makeJar ${NC}"
+cd ${ROOT_DIR}/${TESTING_PLUGIN_DIR}/${BUILD_DIR}
+./gradlew clean makeJar
 
 echo -e "${GREEN}>>> Android build script: Copy JAR to ${TESTING_PLUGIN_DIR} ${NC}"
-cd ${TESTING_PLUGIN_DIR}
-cp ${JAR_IN_DIR}/adjust-testing-bridge.jar ${TESTING_PLUGIN_DIR}
-
-# echo -e "${GREEN}>>> Android build script: remove unneeded Javadoc and sources JARs ${NC}"
-# rm ${TESTING_PLUGIN_DIR}/*-javadoc.jar;
-# rm ${TESTING_PLUGIN_DIR}/*-sources.jar;
-
-# echo -e "${GREEN}>>> Android build script: Rename to Adjust.jar ${NC}"
-# mv ${TESTING_PLUGIN_DIR}/adjust-android.jar ${TESTING_PLUGIN_DIR}/Adjust.jar
+cd ${ROOT_DIR}/${TESTING_PLUGIN_DIR}
+cp -v ${JAR_IN_DIR}/adjust-testing-bridge.jar .
 
 echo -e "${GREEN}>>> Android build script: Complete ${NC}"
