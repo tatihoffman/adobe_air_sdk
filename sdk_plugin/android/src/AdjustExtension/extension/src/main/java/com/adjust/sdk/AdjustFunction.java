@@ -119,11 +119,26 @@ public class AdjustFunction implements FREFunction,
             return Teardown(freContext, freObjects);
         }
 
+        if (functionName == AdjustContext.SetTimerStart) {
+            return SetTimerStart(freContext, freObjects);
+        }
+
+        if (functionName == AdjustContext.SetTimerInterval) {
+            return SetTimerInterval(freContext, freObjects);
+        }
+
+        if (functionName == AdjustContext.SetSessionInterval) {
+            return SetSessionInterval(freContext, freObjects);
+        }
+
+        if (functionName == AdjustContext.SetSubsessionInterval) {
+            return SetSubsessionInterval(freContext, freObjects);
+        }
+
         return null;
     }
 
     private FREObject OnCreate(FREContext freContext, FREObject[] freObjects) {
-        Log.d("AdjustFunction", ">>>>>>>>>>> OnCreate 1");
         try {
             String appToken = null;
             String environment = null;
@@ -269,7 +284,6 @@ public class AdjustFunction implements FREFunction,
                 adjustConfig.setBasePath(basePath);
             }
 
-            Log.d("AdjustFunction", ">>>>>>>>>>> OnCreate 2");
             Adjust.onCreate(adjustConfig);
         } catch (Exception e) {
             Log.e(AdjustExtension.LogTag, e.getMessage());

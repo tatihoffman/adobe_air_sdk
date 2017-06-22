@@ -12,7 +12,7 @@ import com.adobe.fre.FREObject;
 public class AdjustFunction implements FREFunction {
     private static final String TAG = "AdjustFunction";
     private String functionName;
-    private TestLibrary testLibrary;
+    private static TestLibrary testLibrary;
 
     public AdjustFunction(String functionName) {
         this.functionName = functionName;
@@ -44,7 +44,6 @@ public class AdjustFunction implements FREFunction {
             if (freObjects[0] != null) {
                 baseUrl = freObjects[0].getAsString();
             }
-            Log.d(TAG, "initTestSession() with baseUrl[" + baseUrl + "]");
 
             testLibrary = new TestLibrary(baseUrl, new CommandListener());
             testLibrary.initTestSession("adobe_air4.11.2@android4.11.4");

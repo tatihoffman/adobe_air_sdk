@@ -6,10 +6,10 @@ package com.adjust.sdk {
     public class Adjust extends EventDispatcher {
         private static var sdkPrefix:String = "adobe_air4.11.2";
         private static var errorMessage:String = "adjust: SDK not started. Start it manually using the 'start' method";
-        
+
         private static var hasSdkStarted:Boolean = false;
         private static var extensionContext:ExtensionContext = null;
-        
+
         private static var attributionCallbackDelegate:Function;
         private static var googleAdIdCallbackDelegate:Function;
         private static var eventTrackingSucceededDelegate:Function;
@@ -22,7 +22,7 @@ package com.adjust.sdk {
             if (extensionContext != null) {
                 return extensionContext;
             }
-            
+
             return extensionContext = ExtensionContext.createExtensionContext("com.adjust.sdk", null);
         }
 
@@ -146,7 +146,7 @@ package com.adjust.sdk {
         public static function getAttribution():AdjustAttribution {
             var attributionString:String = String (getExtensionContext().call("getAttribution"));
             var attribution:AdjustAttribution = getAttributionFromResponse(attributionString);
-            
+
             return attribution;
         }
 
@@ -190,6 +190,28 @@ package com.adjust.sdk {
         }
 
         public static function teardown(deleteState:Boolean):void {
+            hasSdkStarted = false;
+            extensionContext = null;
+            
+            if (attributionCallbackDelegate != null) {
+                attributionCallbackDelegate = null;
+            }
+            if (eventTrackingSucceededDelegate != null) {
+                eventTrackingSucceededDelegate = null;
+            }
+            if (eventTrackingFailedDelegate != null) {
+                eventTrackingFailedDelegate = null;
+            }
+            if (sessionTrackingSucceededDelegate != null) {
+                sessionTrackingSucceededDelegate = null;
+            }
+            if (sessionTrackingFailedDelegate != null) {
+                sessionTrackingFailedDelegate = null;
+            }
+            if (deferredDeeplinkDelegate != null) {
+                deferredDeeplinkDelegate = null;
+            }
+
             getExtensionContext().call("teardown", deleteState);
         }
 

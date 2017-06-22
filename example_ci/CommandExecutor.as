@@ -280,7 +280,7 @@ package {
             Adjust.teardown(true);
         }
 
-        private static function attributionCallbackDelegate(attribution:AdjustAttribution):void {
+        private function attributionCallbackDelegate(attribution:AdjustAttribution):void {
             AdjustTesting.addInfoToSend("trackerToken", attribution.getTrackerToken());
             AdjustTesting.addInfoToSend("trackerName", attribution.getTrackerName());
             AdjustTesting.addInfoToSend("network", attribution.getNetwork());
@@ -293,7 +293,7 @@ package {
             AdjustTesting.sendInfoToServer();
         }
 
-        private static function eventTrackingSucceededDelegate(eventSuccess:AdjustEventSuccess):void {
+        private function eventTrackingSucceededDelegate(eventSuccess:AdjustEventSuccess):void {
             AdjustTesting.addInfoToSend("message", eventSuccess.getMessage());
             AdjustTesting.addInfoToSend("timestamp", eventSuccess.getTimeStamp());
             AdjustTesting.addInfoToSend("adid", eventSuccess.getAdid());
@@ -303,7 +303,7 @@ package {
             AdjustTesting.sendInfoToServer();
         }
 
-        private static function eventTrackingFailedDelegate(eventFail:AdjustEventFailure):void {
+        private function eventTrackingFailedDelegate(eventFail:AdjustEventFailure):void {
             AdjustTesting.addInfoToSend("message", eventFail.getMessage());
             AdjustTesting.addInfoToSend("timestamp", eventFail.getTimeStamp());
             AdjustTesting.addInfoToSend("adid", eventFail.getAdid());
@@ -314,7 +314,7 @@ package {
             AdjustTesting.sendInfoToServer();
         }
 
-        private static function sessionTrackingSucceededDelegate(sessionSuccess:AdjustSessionSuccess):void {
+        private function sessionTrackingSucceededDelegate(sessionSuccess:AdjustSessionSuccess):void {
             AdjustTesting.addInfoToSend("message", sessionSuccess.getMessage());
             AdjustTesting.addInfoToSend("timestamp", sessionSuccess.getTimeStamp());
             AdjustTesting.addInfoToSend("adid", sessionSuccess.getAdid());
@@ -323,7 +323,7 @@ package {
             AdjustTesting.sendInfoToServer();
         }
 
-        private static function sessionTrackingFailedDelegate(sessionFail:AdjustSessionFailure):void {
+        private function sessionTrackingFailedDelegate(sessionFail:AdjustSessionFailure):void {
             AdjustTesting.addInfoToSend("message", sessionFail.getMessage());
             AdjustTesting.addInfoToSend("timestamp", sessionFail.getTimeStamp());
             AdjustTesting.addInfoToSend("adid", sessionFail.getAdid());
