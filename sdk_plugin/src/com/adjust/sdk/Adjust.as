@@ -107,11 +107,11 @@ package com.adjust.sdk {
             return isEnabled;
         }
 
-        public static function onResume():void {
+        public static function onResume(event:Event):void {
             getExtensionContext().call("onResume");
         }
 
-        public static function onPause():void {
+        public static function onPause(event:Event):void {
             getExtensionContext().call("onPause");
         }
 
