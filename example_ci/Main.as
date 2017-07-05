@@ -14,9 +14,9 @@ package {
         private static var commandExecutor:CommandExecutor = new CommandExecutor();
 
         public function Main() {
-            var baseUrl:String = 'https://192.168.8.21:8443';
+            var baseUrl:String = 'https://192.168.8.41:8443';
             Adjust.setTestingMode(baseUrl);
-
+            AdjustTesting.setTests("current/Test_SessionParams");
             AdjustTesting.initTestSession(baseUrl, testingCommandCallbackDelegate);
         }
 

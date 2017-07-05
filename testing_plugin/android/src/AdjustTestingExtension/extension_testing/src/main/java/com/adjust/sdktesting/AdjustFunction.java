@@ -13,6 +13,7 @@ public class AdjustFunction implements FREFunction {
     private static final String TAG = "AdjustFunction";
     private String functionName;
     private static TestLibrary testLibrary;
+    private static String selectedTests;
 
     public AdjustFunction(String functionName) {
         this.functionName = functionName;
@@ -34,18 +35,22 @@ public class AdjustFunction implements FREFunction {
             return SendInfoToServer(freContext, freObjects);
         }
 
+        if (functionName == AdjustContext.SetTests) {
+            return SetTests(freContext, freObjects);
+        }
+
         return null;
     }
 
     private FREObject InitTestSession(FREContext freContext, FREObject[] freObjects) {
         try {
-            String baseUrl = null;
-
-            if (freObjects[0] != null) {
-                baseUrl = freObjects[0].getAsString();
-            }
+            String baseUrl = freObjects[0].getAsString();
 
             testLibrary = new TestLibrary(baseUrl, new CommandListener());
+            if(this.selectedTests != null && !this.selectedTests.isEmpty()) {
+                testLibrary.setTests(this.selectedTests);
+            }
+
             testLibrary.initTestSession("adobe_air4.11.2@android4.11.4");
         } catch (Exception e) {
             Log.e(AdjustExtension.LogTag, e.getMessage());
@@ -74,6 +79,16 @@ public class AdjustFunction implements FREFunction {
             if (null != testLibrary) {
                 testLibrary.sendInfoToServer();
             }
+        } catch (Exception e) {
+            Log.e(AdjustExtension.LogTag, e.getMessage());
+        }
+
+        return null;
+    }
+
+    private FREObject SetTests(FREContext freContext, FREObject[] freObjects) {
+        try {
+            this.selectedTests = freObjects[0].getAsString();
         } catch (Exception e) {
             Log.e(AdjustExtension.LogTag, e.getMessage());
         }

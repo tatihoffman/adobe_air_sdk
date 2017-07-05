@@ -13,6 +13,7 @@ public class AdjustContext extends FREContext {
     public static String InitTestSession  = "initTestSession";
     public static String AddInfoToSend    = "addInfoToSend";
     public static String SendInfoToServer = "sendInfoToServer";
+    public static String SetTests         = "setTests";
 
     @Override
     public Map<String, FREFunction> getFunctions() {
@@ -21,6 +22,7 @@ public class AdjustContext extends FREContext {
         functions.put(AdjustContext.InitTestSession, new AdjustFunction(AdjustContext.InitTestSession));
         functions.put(AdjustContext.AddInfoToSend, new AdjustFunction(AdjustContext.AddInfoToSend));
         functions.put(AdjustContext.SendInfoToServer, new AdjustFunction(AdjustContext.SendInfoToServer));
+        functions.put(AdjustContext.SetTests, new AdjustFunction(AdjustContext.SetTests));
 
         return functions;
     }

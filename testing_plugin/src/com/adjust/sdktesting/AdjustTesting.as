@@ -30,6 +30,10 @@ package com.adjust.sdktesting {
             getExtensionContext().call("sendInfoToServer");
         }
 
+        public static function setTests(selectedTests:String):void {
+            getExtensionContext().call("setTests", selectedTests);
+        }
+
         private static function extensionResponseDelegate(statusEvent:StatusEvent):void {
             if (statusEvent.code == "adjusttesting_command") {
                 mTestingCommandCallbackDelegate(statusEvent.level);

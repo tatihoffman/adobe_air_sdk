@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 EXAMPLE_CI_DIR=${ADOBE_AIR_SDK_DIR}/example_ci
 MAIN_FILE=Main.as
 VERSION=`cat ${ADOBE_AIR_SDK_DIR}/VERSION`
