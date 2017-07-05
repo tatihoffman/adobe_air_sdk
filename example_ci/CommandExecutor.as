@@ -192,11 +192,11 @@ package {
         }
 
         private function pause(params:Object):void {
-            Adjust.onPause();
+            Adjust.onPause(null);
         }
 
         private function resume(params:Object):void {
-            Adjust.onResume();
+            Adjust.onResume(null);
         }
 
         private function setEnabled(params:Object):void {
