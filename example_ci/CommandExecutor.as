@@ -215,36 +215,48 @@ package {
 
         private function addSessionCallbackParameter(params:Object):void {
             var list:Array = getValueFromKey(params, 'KeyValue');
+
             for (var i:Number = 0; i < list.length; i = i + 2) {
                 var key:String = list[i];
                 var value:String = list[i+1];
-                trace("addSessionCallbackParameter(): " + key + " " + value);
 
+                trace("addSessionCallbackParameter(): " + key + " " + value);
                 Adjust.addSessionCallbackParameter(key, value);
             }
         }
 
         private function addSessionPartnerParameter(params:Object):void {
             var list:Array = getValueFromKey(params, 'KeyValue');
+
             for (var i:Number = 0; i < list.length; i = i + 2) {
                 var key:String = list[i];
                 var value:String = list[i+1];
-                trace("addSessionPartnerParameter(): " + key + " " + value);
 
+                trace("addSessionPartnerParameter(): " + key + " " + value);
                 Adjust.addSessionPartnerParameter(key, value);
             }
         }
 
         private function removeSessionCallbackParameter(params:Object):void {
-            var key:String = getFirstParameterValue(params, 'key');
-            trace("removeSessionCallbackParameter(): " + key);
-            Adjust.removeSessionCallbackParameter(key);
+            var list:Array = getValueFromKey(params, 'key');
+
+            for (var i:Number = 0; i < list.length; i = i + 1) {
+                var key:String = list[i];
+
+                trace("removeSessionCallbackParameter(" + key + ")");
+                Adjust.removeSessionCallbackParameter(key);
+            }
         }
 
         private function removeSessionPartnerParameter(params:Object):void {
-            var key:String = getFirstParameterValue(params, 'key');
-            trace("removeSessionPartnerParameter(): " + key);
-            Adjust.removeSessionPartnerParameter(key);
+            var list:Array = getValueFromKey(params, 'key');
+
+            for (var i:Number = 0; i < list.length; i = i + 1) {
+                var key:String = list[i];
+
+                trace("removeSessionPartnerParameter(" + key + ")");
+                Adjust.removeSessionPartnerParameter(key);
+            }
         }
 
         private function resetSessionCallbackParameters(params:Object):void {
