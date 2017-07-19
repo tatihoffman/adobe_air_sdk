@@ -15,8 +15,8 @@ package {
 
         public function Main() {
             var baseUrl:String = 'https://192.168.8.41:8443';
+
             Adjust.setTestingMode(baseUrl);
-            AdjustTesting.setTests("current/Test_SessionParams");
             AdjustTesting.initTestSession(baseUrl, testingCommandCallbackDelegate);
         }
 
