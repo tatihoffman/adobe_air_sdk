@@ -23,7 +23,11 @@ package com.adjust.sdktesting {
         }
 
         public static function addInfoToSend(key:String, value:String):void {
-            getExtensionContext().call("addInfoToSend", key, value);
+            if ("null" != value) {
+                getExtensionContext().call("addInfoToSend", key, value);
+            } else {
+                getExtensionContext().call("addInfoToSend", key, null);
+            }
         }
 
         public static function sendInfoToServer():void {
