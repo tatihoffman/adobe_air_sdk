@@ -2,10 +2,10 @@
 
 This is the Adobe AIR SDK of Adjust™. You can read more about Adjust™ at [Adjust.com].
 
-## Table of contents
+## Quick Start
 
 * [Example app](#example-app)
-* [Basic integration](#basic-integration)
+* [Getting Started](#basic-integration)
    * [Get the SDK](#sdk-get)
    * [Add the SDK to your project](#sdk-add)
    * [Integrate the SDK into your app](#sdk-integrate)
