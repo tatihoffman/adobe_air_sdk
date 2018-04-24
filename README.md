@@ -15,6 +15,15 @@ This is the Adobe AIR SDK of Adjust™. You can read more about Adjust™ at [Ad
    * [Install referrer](#install-referrer)
       * [Google Play Referrer API](#gpr-api)
       * [Google Play Store intent](#gps-intent)
+ 
+ ### Deep linking    
+      
+     * [Deep linking](#deeplinking)
+     * [Apple Universal Links](#apple-universal-links)
+     * [Deep linking on iOS 8 and earlier](#deeplinking-setup-old)
+     * [Deferred deep linking scenario](#deeplinking-deferred)
+     * [Reattribution via deep links](#deeplinking-reattribution)
+     
    * [Proguard settings](#sdk-proguard)
 * [Additional features](#additional-features)
    * [Event tracking](#event-tracking)
@@ -816,159 +825,7 @@ If you want to use the Adjust SDK to recognize users that found your app pre-ins
     Default tracker: 'abc123'
     ```
 
-### <a id="deeplinking"></a>Deep linking
 
-If you are using the Adjust tracker URL with an option to deep link into your app from the URL, there is the possibility to get information about the deep link URL and its content. Hitting the URL can happen when the user has your app already installed (standard deep linking scenario) or if they don't have the app on their device (deferred deep linking scenario).
-
-### <a id="deeplinking-standard"></a>Standard deep linking scenario
-
-The standard deep linking scenario is a platform specific feature, and in order to support it, you need to add some additional settings to your app.
-
-In order to get information about the URL content in a standard deep linking scenario, you should subscribe to the `InvokeEvent.INVOKE` event and set up a callback method which will be triggered once this event happens. Inside of that callback method, you can access the URL of the deep link which opened your app:
-
-```actionscript
-var app:NativeApplication = NativeApplication.nativeApplication;
-app.addEventListener(InvokeEvent.INVOKE, onInvoke);
-
-// ...
-
-private static function onInvoke(event:InvokeEvent):void {
-    if (event.arguments.length == 0) {
-        return;
-    }
-
-    var deeplink:String = event.arguments[0];
-    
-    trace("Deeplink = " + deeplink);
-}
-```
-
-### <a id="deeplinking-deferred"></a>Deferred deep linking scenario
-
-While deferred deep linking is not supported out of the box on Android and iOS, our Adjust SDK makes it possible.
-
-In order to get information about the URL content in a deferred deep linking scenario, you should set a callback method on the `AdjustConfig` object, which will receive one `String` parameter where the content of the URL will be delivered. You should set this method on the config object by calling the method `setDeferredDeeplinkDelegate`:
-
-```actionscript
-var appToken:String = "{YourAppToken}";
-var environment:String = Environment.SANDBOX;
-      
-var adjustConfig:AdjustConfig = new AdjustConfig(appToken, environment);
-
-adjustConfig.setDeferredDeeplinkDelegate(deferredDeeplinkDelegate);
-
-Adjust.start(adjustConfig);
-
-// ...
-
-private static function deferredDeeplinkDelegate(uri:String):void {
-    trace("Received Deferred Deeplink");
-    trace("Deep link = " + uri);
-}
-```
-
-In a deferred deep linking scenario, there is one additional setting which can be set on the `AdjustConfig` object. Once the Adjust SDK gets the deferred deep link information, you have the possibility to choose whether our SDK should open this URL or not. You can choose to set this option by calling the `setShouldLaunchDeeplink` method on the config object:
-
-```actionscript
-var appToken:String = "{YourAppToken}";
-var environment:String = Environment.SANDBOX;
-      
-var adjustConfig:AdjustConfig = new AdjustConfig(appToken, environment);
-
-adjustConfig.setDeferredDeeplinkDelegate(deferredDeeplinkDelegate);
-adjustConfig.setShouldLaunchDeeplink(true);
-
-Adjust.start(adjustConfig);
-
-// ...
-
-private static function deferredDeeplinkDelegate(uri:String):void {
-    trace("Received Deferred Deeplink");
-    trace("Deep link = " + uri);
-}
-```
-
-If nothing is set, **the Adjust SDK will always try to launch the URL by default**.
-
-To enable your app to support deep linking, you should do some additional set up for each supported platform.
-
-### <a id="deeplinking-android"></a>Deep linking setup for Android
-
-To set a scheme name for your Android app, you should add the following `<intent-filter>` to the activity you want to launch after deep linking:
-
-```xml
-<!-- ... -->
-<activity>
-    <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
-    </intent-filter>
-    <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data android:scheme="schemeName" />
-    </intent-filter>
-</activity>
-<!-- ... -->
-```
-
-You should replace `schemeName` with your desired scheme name for Android app.
-
-### <a id="deeplinking-ios"></a>Deep linking setup for iOS
-
-In order to set a scheme name for your iOS app, you should add the following key-value pair into the `<InfoAdditions>` section of the app descriptor's `<iPhone>` section:
-
-```xml
-<iPhone>
-    <!-- ... --->
-    <InfoAdditions><![CDATA[
-        <key>CFBundleURLTypes</key>
-        <array>
-            <dict>
-              <key>CFBundleURLName</key>
-              <string>com.your.bundle</string>
-              <key>CFBundleURLSchemes</key>
-              <array>
-                <string>schemeName</string>
-              </array>
-            </dict>
-        </array>
-    ]]></InfoAdditions>
-    <!-- ... -->
-</iPhone>
-```
-
-You should replace `com.your.bundle` with your app's bundle ID and `schemeName` with your desired scheme name for iOS app.
-
-**Important**: By using this approach for deep linking support in iOS, you will support deep link handling for devices running on **iOS 8 and lower**. Starting from **iOS 9**, Apple has introduced universal links for which, at this moment,  there's no built in support inside the Adobe AIR platform. To support this, you would need to edit the natively generated iOS project in Xcode (if possible) and add support to handle universal links from there. If you are interested in finding out how to do that on the native side, please consult our [native iOS universal links guide][universal-links-guide].
-
-### <a id="deeplinking-reattribution"></a>Reattribution via deep links
-
-Adjust enables you to run re-engagement campaigns through deep links. For more information on how to do that, please check our [official docs][reattribution-with-deeplinks].
-
-If you are using this feature, in order for your user to be properly reattributed, you need to make one additional call to the Adjust SDK in your app.
-
-Once you have received deep link content information in your app, add a call to the `Adjust.appWillOpenUrl` method. By making this call, the Adjust SDK will try to find if there is any new attribution information inside of the deep link. If there is any, it will be sent to the Adjust backend. If your user should be reattributed due to a click on the adjust tracker URL with deep link content, you will see the [attribution callback](#attribution-callback) in your app being triggered with new attribution info for this user.
-
-```actionscript
-var app:NativeApplication = NativeApplication.nativeApplication;
-app.addEventListener(InvokeEvent.INVOKE, onInvoke);
-
-// ...
-
-private static function onInvoke(event:InvokeEvent):void {
-    if (event.arguments.length == 0) {
-        return;
-    }
-
-    var deeplink:String = event.arguments[0];
-    
-    trace("Deeplink = " + deeplink);
-    
-    Adjust.appWillOpenUrl(deeplink);
-}
-```
 
 
 [dashboard]:    http://adjust.com
