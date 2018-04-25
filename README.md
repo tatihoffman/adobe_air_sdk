@@ -11,10 +11,12 @@ This is the Adobe AIR SDK of Adjust™. You can read more about Adjust™ at [Ad
    * [Integrate the SDK into your app](#sdk-integrate)
    * [Adjust logging](#sdk-logging)
    * [Android permissions](#android-permissions)
+   * [SDK signature](#sdk-signature)
    * [Google Play Services](#google-play-services)
    * [Install referrer](#install-referrer)
       * [Google Play Referrer API](#gpr-api)
       * [Google Play Store intent](#gps-intent)
+   * [Build your app](#build-the-app)
  
  ### Deep linking    
       
@@ -182,6 +184,17 @@ You will need to add following permissions:
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" />
 ```
+### <a id="sdk-signature"></a> SDK signature
+
+The Adjust SDK signature is enabled on a client-by-client basis. If you are interested in using this feature, please contact your account manager.
+
+If the SDK signature has already been enabled on your account and you have access to App Secrets in your Adjust Dashboard, please use the method below to integrate the SDK signature into your app.
+
+An App Secret is set by calling `setAppSecret` on your `AdjustConfig` instance:
+
+```objc
+[adjustConfig setAppSecret:secretId info1:info1 info2:info2 info3:info3 info4:info4];
+```
 
 ### <a id="google-play-services"></a>Google Play Services
 
@@ -268,6 +281,25 @@ The Google Play Store `INSTALL_REFERRER` intent should be captured with a broadc
 ```
 
 Also, in case you are using your custom broadcast receiver, please make a call to the Adjust broadcast receiver as described in [here][custom-broadcast-receiver].
+
+### <a id="build-the-app"></a>Build your app
+
+Build and run your app. If the build succeeds, you should carefully read the SDK logs in the console. After the app launches for the first time, you should see the info log `Install tracked`.
+
+![][run]
+
+
+#### Common issues:
+
+  * [Adjust requires ARC](#ts-arc)
+  * [[UIDevice adjTrackingEnabled]: unrecognized selector sent to instance](#ts-categories)
+  * [Session failed (Ignoring too frequent session.)](#ts-session-failed)
+  * [no "Install Tracked" message](#ts-install-tracked)
+  * [Unattributable SDK click ignored](#ts-iad-sdk-click)
+
+
+Once you integrate the adjust SDK into your project, you can take advantage of the following features.
+
 
 ## <a id="must-have"></a>Deep linking
 
