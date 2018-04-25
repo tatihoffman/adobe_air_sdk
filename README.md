@@ -18,28 +18,43 @@ This is the Adobe AIR SDK of Adjust™. You can read more about Adjust™ at [Ad
  
  ### Deep linking    
       
-   * [Deep linking](#deeplinking)
-     * [Apple Universal Links](#apple-universal-links)
-     * [Deep linking on iOS 8 and earlier](#deeplinking-setup-old)
-     * [Deferred deep linking scenario](#deeplinking-deferred)
-     * [Reattribution via deep links](#deeplinking-reattribution)
+* [Deep linking](#deeplinking)
+  * [Apple Universal Links](#apple-universal-links)
+  * [Deep linking on iOS 8 and earlier](#deeplinking-setup-old)
+  * [Deferred deep linking scenario](#deeplinking-deferred)
+  * [Reattribution via deep links](#deeplinking-reattribution)
      
  ### Event Tracking
 
-   * [Event Tracking](#event-tracking)
-     * [Revenue tracking](#revenue-tracking)
-     * [Revenue deduplication](#revenue-deduplication)
-     * [In-App Purchase verification](#iap-verification)   
+* [Event Tracking](#event-tracking)
+  * [Revenue tracking](#revenue-tracking)
+  * [Revenue deduplication](#revenue-deduplication)
+  * [In-App Purchase verification](#iap-verification)   
      
  ### Custom Parameters
 
-   * [Event Parameters](#event-parameters)
-     * [Event callback parameters](#callback-parameters)
-     * [Event partner parameters](#partner-parameters)
-   * [Session parameters](#session-parameters)
-     * [Session callback parameters](#session-callback-parameters)
-     * [Session partner parameters](#session-partner-parameters)
-   * [Delay start](#delay-start) 
+* [Event Parameters](#event-parameters)
+  * [Event callback parameters](#callback-parameters)
+  * [Event partner parameters](#partner-parameters)
+* [Session parameters](#session-parameters)
+  * [Session callback parameters](#session-callback-parameters)
+  * [Session partner parameters](#session-partner-parameters)
+  * [Delay start](#delay-start) 
+  
+  ### Additional Features
+     
+   * [Push token (Uninstall/Reinstall tracking)](#push-token)
+   * [Attribution callback](#attribution-callback)
+   * [User attribution](#user-attribution)
+   * [Event and session callbacks](#event-session-callbacks)
+   * [Device IDs](#device-ids)
+     * [iOS Advertising Identifier](#di-idfa)
+     * [Adjust device identifier](#di-adid)
+   * [Pre-installed trackers](#pre-installed-trackers)
+   * [Event buffering](#event-buffering)
+   * [Background tracking](#background-tracking)
+   * [Offline mode](#offline-mode)
+   * [Disable tracking](#disable-tracking)
      
    * [Proguard settings](#sdk-proguard)
 * [Additional features](#additional-features)
