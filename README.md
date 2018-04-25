@@ -24,6 +24,23 @@ This is the Adobe AIR SDK of Adjust™. You can read more about Adjust™ at [Ad
      * [Deferred deep linking scenario](#deeplinking-deferred)
      * [Reattribution via deep links](#deeplinking-reattribution)
      
+ ### Event Tracking
+
+   * [Event Tracking](#event-tracking)
+     * [Revenue tracking](#revenue-tracking)
+     * [Revenue deduplication](#revenue-deduplication)
+     * [In-App Purchase verification](#iap-verification)   
+     
+ ### Custom Parameters
+
+   * [Event Parameters](#event-parameters)
+     * [Event callback parameters](#callback-parameters)
+     * [Event partner parameters](#partner-parameters)
+   * [Session parameters](#session-parameters)
+     * [Session callback parameters](#session-callback-parameters)
+     * [Session partner parameters](#session-partner-parameters)
+   * [Delay start](#delay-start) 
+     
    * [Proguard settings](#sdk-proguard)
 * [Additional features](#additional-features)
    * [Event tracking](#event-tracking)
@@ -377,6 +394,177 @@ The call to `appWillOpenUrl` should be done like this to support deep linking re
     // return NO;
 }
 ```
+
+#### [Common issues](#ts-reattribution-deeplinks)
+
+### <a id="revenue-tracking"></a>Revenue tracking
+
+If your users can generate revenue by tapping on advertisements or making in-app purchases you can track those revenues with events. Lets say a tap is worth one Euro cent. You could then track the revenue event like this:
+
+```objc
+ADJEvent *event = [ADJEvent eventWithEventToken:@"abc123"];
+
+[event setRevenue:0.01 currency:@"EUR"];
+
+[Adjust trackEvent:event];
+```
+
+This can be combined with callback parameters of course.
+
+When you set a currency token, adjust will automatically convert the incoming revenues into a reporting revenue of your choice. Read more about [currency conversion here.][currency-conversion]
+
+You can read more about revenue and event tracking in the [event tracking guide](https://docs.adjust.com/en/event-tracking/#tracking-purchases-and-revenues).
+
+#### [Common issues](#ts-wrong-revenue-amount)
+
+### <a id="revenue-deduplication"></a>Revenue deduplication
+
+You can also pass in an optional transaction ID to avoid tracking duplicate revenues. The last ten transaction IDs are remembered and revenue events with duplicate transaction IDs are skipped. This is especially useful for in-app purchase tracking. See an example below.
+
+If you want to track in-app purchases, please make sure to call `trackEvent` after `finishTransaction` in `paymentQueue:updatedTransaction` only if the state changed to `SKPaymentTransactionStatePurchased`. That way you can avoid tracking revenue that is not actually being generated.
+
+```objc
+- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
+    for (SKPaymentTransaction *transaction in transactions) {
+        switch (transaction.transactionState) {
+            case SKPaymentTransactionStatePurchased:
+                [self finishTransaction:transaction];
+
+                ADJEvent *event = [ADJEvent eventWithEventToken:...];
+                [event setRevenue:... currency:...];
+                [event setTransactionId:transaction.transactionIdentifier]; // avoid duplicates
+                [Adjust trackEvent:event];
+
+                break;
+            // more cases
+        }
+    }
+}
+```
+
+### <a id="iap-verification"></a>In-App Purchase verification
+
+If you want to check the validity of In-App Purchases made in your app using Purchase Verification, adjust's server side receipt verification tool, then check out our iOS purchase SDK and read more about it [here][ios-purchase-verification].
+
+## Custom Parameters
+
+### <a id="event-parameters"></a>Event parameters
+
+In addition to the data points that Adjust collects [by default](https://partners.adjust.com/placeholders/), you can use the Adjust SDK to track and add to the events as many custom values as you need (user IDs, product IDs...). Custom parameters are only available as raw data (i.e., they won't appear in the Adjust dashboard).
+
+You should use Callback parameters for the values that you collect for your own internal use, and Partner parameters for those that you wish to share with external partners. If a value (e.g. product ID) is tracked both for internal use and to forward it to external partners, the best practice would be to track it both as callback and partner parameter.
+
+### <a id="callback-parameters"></a>Event callback parameters
+
+You can register a callback URL for your events in your [dashboard]. We will send a GET request to that URL whenever the event is tracked. You can add callback parameters to that event by calling `addCallbackParameter` to the event before tracking it. We will then append these parameters to your callback URL.
+
+For example, suppose you have registered the URL `http://www.mydomain.com/callback` then track an event like this:
+
+```objc
+ADJEvent *event = [ADJEvent eventWithEventToken:@"abc123"];
+
+[event addCallbackParameter:@"key" value:@"value"];
+[event addCallbackParameter:@"foo" value:@"bar"];
+
+[Adjust trackEvent:event];
+```
+
+In that case we would track the event and send a request to:
+
+    http://www.mydomain.com/callback?key=value&foo=bar
+
+It should be mentioned that we support a variety of placeholders like `{idfa}` that can be used as parameter values. In the resulting callback this placeholder would be replaced with the ID for Advertisers of the current device. Also note that we don't store any of your custom parameters, but only append them to your callbacks, thus without a callback they will not be saved nor sent to you.
+
+You can read more about using URL callbacks, including a full list of available values, in our [callbacks guide][callbacks-guide].
+
+### <a id="partner-parameters"></a>Event partner parameters
+
+You can also add parameters to be transmitted to network partners, which have been activated in your Adjust dashboard.
+
+This works similarly to the callback parameters mentioned above, but can be added by calling the `addPartnerParameter` method on your `ADJEvent` instance.
+
+```objc
+ADJEvent *event = [ADJEvent eventWithEventToken:@"abc123"];
+
+[event addPartnerParameter:@"key" value:@"value"];
+[event addPartnerParameter:@"foo" value:@"bar"];
+
+[Adjust trackEvent:event];
+```
+
+You can read more about special partners and these integrations in our [guide to special partners][special-partners].
+
+### <a id="session-parameters"></a>Session parameters
+
+Some parameters are saved to be sent in every event and session of the adjust SDK. Once you have added any of these parameters, you don't need to add them every time, since they will be saved locally. If you add the same parameter twice, there will be no effect.
+
+If you want to send session parameters with the initial install event, they must be called before the Adjust SDK launches via `[Adjust appDidLaunch:]`. If you need to send them with an install, but can only obtain the needed values after launch, it's possible to [delay](#delay-start) the first launch of the adjust SDK to allow this behavior.
+
+### <a id="session-callback-parameters"></a>Session callback parameters
+
+The same callback parameters that are registered for [events](#callback-parameters) can be also saved to be sent in every event or session of the adjust SDK.
+
+The session callback parameters have a similar interface of the event callback parameters. Instead of adding the key and it's value to an event, it's added through a call to `Adjust` method `addSessionCallbackParameter:value:`:
+
+```objc
+[Adjust addSessionCallbackParameter:@"foo" value:@"bar"];
+```
+
+The session callback parameters will be merged with the callback parameters added to an event. The callback parameters added to an event have precedence over the session callback parameters. Meaning that, when adding a callback parameter to an event with the same key to one added from the session, the value that prevails is the callback parameter added to the event.
+
+It's possible to remove a specific session callback parameter by passing the desiring key to the method `removeSessionCallbackParameter`.
+
+```objc
+[Adjust removeSessionCallbackParameter:@"foo"];
+```
+
+If you wish to remove all key and values from the session callback parameters, you can reset it with the method `resetSessionCallbackParameters`.
+
+```objc
+[Adjust resetSessionCallbackParameters];
+```
+
+### <a id="session-partner-parameters"></a>Session partner parameters
+
+In the same way that there is [session callback parameters](#session-callback-parameters) that are sent every in event or session of the adjust SDK, there is also session partner parameters.
+
+These will be transmitted to network partners, for the integrations that have been activated in your adjust [dashboard].
+
+The session partner parameters have a similar interface to the event partner parameters. Instead of adding the key and it's value to an event, it's added through a call to `Adjust` method `addSessionPartnerParameter:value:`:
+
+```objc
+[Adjust addSessionPartnerParameter:@"foo" value:@"bar"];
+```
+
+The session partner parameters will be merged with the partner parameters added to an event. The partner parameters added to an event have precedence over the session partner parameters. Meaning that, when adding a partner parameter to an event with the same key to one added from the session, the value that prevails is the partner parameter added to the event.
+
+It's possible to remove a specific session partner parameter by passing the desiring key to the method `removeSessionPartnerParameter`.
+
+```objc
+[Adjust removeSessionPartnerParameter:@"foo"];
+```
+
+If you wish to remove all key and values from the session partner parameters, you can reset it with the method `resetSessionPartnerParameters`.
+
+```objc
+[Adjust resetSessionPartnerParameters];
+```
+
+### <a id="delay-start"></a>Delay start
+
+Delaying the start of the adjust SDK allows your app some time to obtain session parameters, such as unique identifiers, to be send on install.
+
+Set the initial delay time in seconds with the method `setDelayStart` in the `ADJConfig` instance:
+
+```objc
+[adjustConfig setDelayStart:5.5];
+```
+
+In this case this will make the adjust SDK not send the initial install session and any event created for 5.5 seconds. After this time is expired or if you call `[Adjust sendFirstPackages]` in the meanwhile, every session parameter will be added to the delayed install session and events and the adjust SDK will resume as usual.
+
+**The maximum delay start time of the adjust SDK is 10 seconds**.
+
+#### [Common issues](#ts-delayed-init)
 
 ### <a id="sdk-proguard"></a>Proguard settings
 
