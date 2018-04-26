@@ -662,6 +662,204 @@ To send us the push notification token, add the following call to `Adjust` in th
 Push tokens are used for the Adjust Audience Builder and client callbacks, and are required for the upcoming uninstall tracking feature.
 
 
+### <a id="attribution-callback"></a>Attribution callback
+
+You can register a delegate callback to be notified of tracker attribution changes. Due to the different sources considered for attribution, this information can not be provided synchronously. Follow these steps to implement the optional delegate protocol in your app delegate:
+
+Please make sure to consider our [applicable attribution data policies.][attribution-data]
+
+1. Open `AppDelegate.h` and add the import and the `AdjustDelegate` declaration.
+
+    ```objc
+    @interface AppDelegate : UIResponder <UIApplicationDelegate, AdjustDelegate>
+    ```
+
+2. Open `AppDelegate.m` and add the following delegate callback function to your app delegate implementation.
+
+    ```objc
+    - (void)adjustAttributionChanged:(ADJAttribution *)attribution {
+    }
+    ```
+
+3. Set the delegate with your `ADJConfig` instance:
+
+    ```objc
+    [adjustConfig setDelegate:self];
+    ```
+
+As the delegate callback is configured using the `ADJConfig` instance, you should call `setDelegate` before calling `[Adjust appDidLaunch:adjustConfig]`.
+
+The delegate function will be called after the SDK receives the final attribution data. Within the delegate function you have access to the `attribution` parameter. Here is a quick summary of its properties:
+
+- `NSString trackerToken` the tracker token of the current attribution.
+- `NSString trackerName` the tracker name of the current attribution.
+- `NSString network` the network grouping level of the current attribution.
+- `NSString campaign` the campaign grouping level of the current attribution.
+- `NSString adgroup` the ad group grouping level of the current attribution.
+- `NSString creative` the creative grouping level of the current attribution.
+- `NSString clickLabel` the click label of the current attribution.
+- `NSString adid` the unique device identifier provided by attribution.
+
+If any value is unavailable, it will default to `nil`.
+
+### <a id="user-attribution"></a>User attribution
+
+The attribution callback will be triggered as described in the [attribution callback section](#attribution-callback), providing you with the information about any new attribution when ever it changes. In any other case, where you want to access information about your user's current attribution, you can make a call to the following method of the `Adjust` instance:
+
+```objc
+ADJAttribution *attribution = [Adjust attribution];
+```
+
+**Note**: Information about current attribution is available after app installation has been tracked by the adjust backend and attribution callback has been initially triggered. From that moment on, adjust SDK has information about your user's attribution and you can access it with this method. So, **it is not possible** to access user's attribution value before the SDK has been initialised and attribution callback has been initially triggered.
+
+### <a id="event-session-callbacks"></a>Event and session callbacks
+
+You can register a delegate callback to be notified of successful and failed tracked events and/or sessions. The same optional protocol `AdjustDelegate` used for the [attribution callback](#attribution-callback) is used.
+
+Follow the same steps and implement the following delegate callback function for successful tracked events:
+
+```objc
+- (void)adjustEventTrackingSucceeded:(ADJEventSuccess *)eventSuccessResponseData {
+}
+```
+
+The following delegate callback function for failed tracked events:
+
+```objc
+- (void)adjustEventTrackingFailed:(ADJEventFailure *)eventFailureResponseData {
+}
+```
+
+For successful tracked sessions:
+
+```objc
+- (void)adjustSessionTrackingSucceeded:(ADJSessionSuccess *)sessionSuccessResponseData {
+}
+```
+
+And for failed tracked sessions:
+
+```objc
+- (void)adjustSessionTrackingFailed:(ADJSessionFailure *)sessionFailureResponseData {
+}
+```
+
+The delegate functions will be called after the SDK tries to send a package to the server. Within the delegate callback you have access to a response data object specifically for the delegate callback. Here is a quick summary of the session response data properties:
+
+- `NSString message` the message from the server or the error logged by the SDK.
+- `NSString timeStamp` timestamp from the server.
+- `NSString adid` a unique device identifier provided by adjust.
+- `NSDictionary jsonResponse` the JSON object with the response from the server.
+
+Both event response data objects contain:
+
+- `NSString eventToken` the event token, if the package tracked was an event.
+
+If any value is unavailable, it will default to `nil`.
+
+And both event and session failed objects also contain:
+
+- `BOOL willRetry` indicates that there will be an attempt to resend the package at a later time.
+
+### <a id="device-ids"></a>Device IDs
+
+The adjust SDK offers you possibility to obtain some of the device identifiers.
+
+### <a id="di-idfa"></a>iOS Advertising Identifier
+
+Certain services (such as Google Analytics) require you to coordinate device and client IDs in order to prevent duplicate reporting.
+
+To obtain the device identifier IDFA, call the function `idfa`:
+
+```objc
+NSString *idfa = [Adjust idfa];
+```
+
+### <a id="di-adid"></a>Adjust device identifier
+
+For each device with your app installed, adjust backend generates unique **adjust device identifier** (**adid**). In order to obtain this identifier, you can make a call to the following method on the `Adjust` instance:
+
+```objc
+NSString *adid = [Adjust adid];
+```
+
+**Note**: Information about the **adid** is available after the app's installation has been tracked by the adjust backend. From that moment on, the adjust SDK has information about the device **adid** and you can access it with this method. So, **it is not possible** to access the **adid** before the SDK has been initialised and the installation of your app has been tracked successfully.
+  
+### <a id="pre-installed-trackers"></a>Pre-installed trackers
+
+If you want to use the Adjust SDK to recognize users that found your app pre-installed on their device, follow these steps.
+
+1. Create a new tracker in your [dashboard].
+2. Open your app delegate and add set the default tracker of your `ADJConfig`:
+
+  ```objc
+  ADJConfig *adjustConfig = [ADJConfig configWithAppToken:yourAppToken environment:environment];
+  [adjustConfig setDefaultTracker:@"{TrackerToken}"];
+  [Adjust appDidLaunch:adjustConfig];
+  ```
+
+  Replace `{TrackerToken}` with the tracker token you created in step 2. Please note that the dashboard displays a tracker
+  URL (including `http://app.adjust.com/`). In your source code, you should specify only the six-character token and not
+  the entire URL.
+
+3. Build and run your app. You should see a line like the following in XCode:
+
+    ```
+    Default tracker: 'abc123'
+    ```
+
+### <a id="event-buffering"></a>Event buffering
+
+If your app makes heavy use of event tracking, you might want to delay some HTTP requests in order to send them in one batch every minute. You can enable event buffering with your `ADJConfig` instance:
+
+```objc
+[adjustConfig setEventBufferingEnabled:YES];
+```
+
+If nothing is set, event buffering is **disabled by default**.
+
+
+
+### <a id="background-tracking"></a>Background tracking
+
+The default behaviour of the adjust SDK is to pause sending HTTP requests while the app is in the background. You can change this in your `AdjustConfig` instance:
+
+```objc
+[adjustConfig setSendInBackground:YES];
+```
+
+If nothing is set, sending in background is **disabled by default**.
+
+### <a id="offline-mode"></a>Offline mode
+
+You can put the adjust SDK in offline mode to suspend transmission to our servers while retaining tracked data to be sent later. While in offline mode, all information is saved in a file, so be careful not to trigger too many events while in offline mode.
+
+You can activate offline mode by calling `setOfflineMode` with the parameter `YES`.
+
+```objc
+[Adjust setOfflineMode:YES];
+```
+
+Conversely, you can deactivate offline mode by calling `setOfflineMode` with `NO`. When the adjust SDK is put back in online mode, all saved information is sent to our servers with the correct time information.
+
+Unlike disabling tracking, this setting is **not remembered** bettween sessions. This means that the SDK is in online mode whenever it is started, even if the app was terminated in offline mode.
+
+#### [Common issues](#ts-offline-disable)
+
+### <a id="disable-tracking"></a>Disable tracking
+
+You can disable the adjust SDK from tracking any activities of the current device by calling `setEnabled` with parameter `NO`. **This setting is remembered between sessions**, but it can only be activated after the first session.
+
+```objc
+[Adjust setEnabled:NO];
+```
+
+<a id="is-enabled">You can check if the adjust SDK is currently enabled by calling the function `isEnabled`. It is always possible to activate the adjust SDK by invoking `setEnabled` with the enabled parameter as `YES`.
+
+#### [Common issues](#ts-offline-disable)
+  
+  
+
 ## <a id="troubleshooting"></a>Testing and Troubleshooting
 
 ### <a id="ts-delayed-init"></a>Issues with delayed SDK initialisation
