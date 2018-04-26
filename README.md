@@ -35,13 +35,13 @@ This is the Adobe AIR SDK of Adjust™. You can read more about Adjust™ at [Ad
      
  ### Custom Parameters
 
-* [Event Parameters](#event-parameters)
-  * [Event callback parameters](#callback-parameters)
-  * [Event partner parameters](#partner-parameters)
-* [Session parameters](#session-parameters)
-  * [Session callback parameters](#session-callback-parameters)
-  * [Session partner parameters](#session-partner-parameters)
-  * [Delay start](#delay-start) 
+   * [Event Parameters](#event-parameters)
+     * [Event callback parameters](#callback-parameters)
+     * [Event partner parameters](#partner-parameters)
+   * [Session parameters](#session-parameters)
+     * [Session callback parameters](#session-callback-parameters)
+     * [Session partner parameters](#session-partner-parameters)
+   * [Delay start](#delay-start)
   
   ### Additional Features
      
